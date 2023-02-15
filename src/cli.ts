@@ -20,7 +20,7 @@ program.name('remind').description('A natural language reminder CLI.');
 
 program
     .command('complete')
-    .description('Mark a reminder as completed.')
+    .description('Complete a reminder.')
     .argument('[reminder...]', 'The text of the reminder.')
     .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
     .action(async (reminderWords, options) => {
@@ -30,9 +30,7 @@ program
         await complete(reminderText, { search });
     });
 
-const daemon = program
-    .command('daemon')
-    .description('Commands to control the `remindd` daemon.');
+const daemon = program.command('daemon').description('`remindd` daemon.');
 
 daemon
     .command('start')
@@ -105,7 +103,7 @@ program
 
 program
     .command('reschedule')
-    .description('Reschedule a reminder to a another time.')
+    .description('Reschedule a reminder.')
     .argument(
         '<reminder...>',
         'The reminder information, including the date and time.'
