@@ -9,6 +9,7 @@ import {
     info,
     list,
     me,
+    remove,
     reschedule,
 } from './commands/index.js';
 import setup from './setup.js';
@@ -21,10 +22,6 @@ program
     .command('complete')
     .description('Mark a reminder as completed.')
     .argument('[reminder...]', 'The text of the reminder.')
-    .option(
-        '-i, --interactive',
-        '(Not implemented) Renders the reminders in interactive mode.'
-    )
     .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
     .action(async (reminderWords, options) => {
         const { search = false } = options;
@@ -95,15 +92,23 @@ program
     });
 
 program
+    .command('remove')
+    .description('Remove a reminder.')
+    .argument('[reminder...]', 'The text of the reminder.')
+    .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
+    .action(async (reminderWords, options) => {
+        const { search = false } = options;
+        await setup();
+        const reminderText = reminderWords.join(' ');
+        await remove(reminderText, { search });
+    });
+
+program
     .command('reschedule')
     .description('Reschedule a reminder to a another time.')
     .argument(
         '<reminder...>',
         'The reminder information, including the date and time.'
-    )
-    .option(
-        '-i, --interactive',
-        '(Not implemented) Renders the reminders in interactive mode.'
     )
     .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
     .action(async (reminderWords, options) => {

@@ -24,6 +24,7 @@ Commands:
   info                                Prints information about the current installation.
   list [options]                      List the reminders.
   me <reminder...>                    Create a reminder.
+  remove [options] [reminder...]      Remove a reminder.
   reschedule [options] <reminder...>  Reschedule a reminder to a another time.
   help [command]                      display help for command
 ```
