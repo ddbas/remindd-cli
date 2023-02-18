@@ -30,7 +30,7 @@
     "format": "prettier --write .",
     "lint": "eslint .",
     "prepare": "husky install",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "rm -rf bin && npm run build"
   },
   "bugs": {
     "url": "https://github.com/ddbas/remindd-cli/issues"
