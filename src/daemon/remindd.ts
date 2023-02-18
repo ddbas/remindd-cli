@@ -2,7 +2,7 @@
 import notifier from 'node-notifier';
 
 import getLogger, { Logger } from '../logger.js';
-import Store from '../store.js';
+import store from '../store/index.js';
 
 type TimeoutInfo = {
     time: number;
@@ -16,16 +16,15 @@ const logger = getLogger(Logger.DAEMON);
 
 logger.info('Daemon started.');
 
-const store = new Store();
 const timeouts: Record<string, TimeoutInfo> = {};
 
 const synchronize = async () => {
     logger.info('Synchronizing.');
 
     logger.trace('Getting store data.');
-    let data;
+    let records;
     try {
-        data = await store.getData();
+        records = await store.getIncomplete();
     } catch (error) {
         logger.warn(error, 'Failed to get the store data.');
         return;
@@ -33,7 +32,7 @@ const synchronize = async () => {
 
     logger.trace('Iterating over the records.');
     const imminentReminders: Set<string> = new Set();
-    data.records.forEach((record) => {
+    records.forEach((record) => {
         const childLogger = logger.child({ record });
         childLogger.debug('Processing record.');
 

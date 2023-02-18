@@ -1,4 +1,4 @@
-import { Record } from './store.js';
+import { Record } from './store/index.js';
 
 const DEFAULT_COMPONENT_WIDTHS = {
     i: 8,

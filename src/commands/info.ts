@@ -1,11 +1,8 @@
-import { directory as logDirectory } from '../logger.js';
-import Store from '../store.js';
+import app from '../app.js';
 
 const info = async (): Promise<void> => {
-    const store = new Store();
-
-    console.log(`Data path: ${store.path}`);
-    console.log(`Log path: ${logDirectory}`);
+    console.log(`Data path: ${app.paths.store}`);
+    console.log(`Log path: ${app.paths.logs}`);
 };
 
 export default info;

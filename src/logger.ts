@@ -1,10 +1,6 @@
-import os from 'node:os';
 import path from 'node:path';
 import pino from 'pino';
-
-import constants from './constants.js';
-
-const DIRECTORY = 'logs';
+import app from './app.js';
 
 type PinoLogger = any;
 enum Logger {
@@ -13,10 +9,7 @@ enum Logger {
 }
 
 const loggers: Record<string, PinoLogger> = {};
-const homedir = os.homedir();
-const directory = process.env.XDG_STATE_HOME
-    ? path.join(process.env.XDG_STATE_HOME, constants.APP_NAME, DIRECTORY)
-    : path.join(homedir, '.local', 'state', constants.APP_NAME, DIRECTORY);
+const directory = app.paths.logs;
 
 const getLogger = (logger: Logger): PinoLogger => {
     if (loggers[logger]) {
@@ -42,6 +35,6 @@ const getLogger = (logger: Logger): PinoLogger => {
     return loggers[logger];
 };
 
-export { directory, Logger };
+export { Logger };
 
 export default getLogger;

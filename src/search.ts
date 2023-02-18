@@ -1,6 +1,6 @@
 import { Fzf } from 'fzf';
 
-import { Record } from './store.js';
+import { Record } from './store/index.js';
 
 type FzfSearchResult = {
     item: Record;

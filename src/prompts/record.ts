@@ -1,7 +1,7 @@
 import getFormatter, { Formattable, FormattableRecord } from '../format.js';
 import prompt, { Keypress } from './prompt.js';
 import makeSearcher, { Match, SearchResult } from '../search.js';
-import { Record } from '../store.js';
+import { Record } from '../store/index.js';
 
 const DEFAULT_LIMIT = 10;
 

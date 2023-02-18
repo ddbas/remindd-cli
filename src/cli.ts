@@ -12,7 +12,6 @@ import {
     remove,
     reschedule,
 } from './commands/index.js';
-import setup from './setup.js';
 
 const program = new Command();
 
@@ -25,7 +24,6 @@ program
     .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
     .action(async (reminderWords, options) => {
         const { search = false } = options;
-        await setup();
         const reminderText = reminderWords.join(' ');
         await complete(reminderText, { search });
     });
@@ -72,7 +70,6 @@ program
     .option('-p, --pretty', '(Not implemented) Print in a structured format.')
     .action(async (options) => {
         const { header = false } = options;
-        await setup();
         await list({ header });
     });
 
@@ -84,7 +81,6 @@ program
         'The reminder information, including the date and time.'
     )
     .action(async (reminderWords) => {
-        await setup();
         const reminderText = reminderWords.join(' ');
         await me(reminderText);
     });
@@ -96,7 +92,6 @@ program
     .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
     .action(async (reminderWords, options) => {
         const { search = false } = options;
-        await setup();
         const reminderText = reminderWords.join(' ');
         await remove(reminderText, { search });
     });
@@ -111,7 +106,6 @@ program
     .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
     .action(async (reminderWords, options) => {
         const { search = false } = options;
-        await setup();
         const reminderText = reminderWords.join(' ');
         await reschedule(reminderText, { search });
     });
