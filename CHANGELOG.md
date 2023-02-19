@@ -1,3 +1,12 @@
+# [1.2.0](https://github.com/ddbas/remindd-cli/compare/v1.1.0...v1.2.0) (2023-02-19)
+
+
+### Features
+
+* add a -v/--version option ([854415e](https://github.com/ddbas/remindd-cli/commit/854415e7f00547bfd3db0b5b430e8c4f8a9670aa))
+
+
+
 # 1.1.0 (2023-02-18)
 
 
