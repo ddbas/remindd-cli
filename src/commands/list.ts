@@ -2,13 +2,25 @@ import getFormatter, { FormattableRecord } from '../format.js';
 import store from '../store/index.js';
 
 type Options = {
+    all: boolean;
     completed: boolean;
     header: boolean;
 };
 
 const list = async (options: Options): Promise<void> => {
     let records;
-    if (options.completed) {
+    if (options.all) {
+        const promise = Promise.all([
+            store.getIncomplete(),
+            store.getCompleted(),
+        ]);
+        records = (await promise).flat().sort((record, otherRecord) => {
+            return (
+                record.reminder.date.getTime() -
+                otherRecord.reminder.date.getTime()
+            );
+        });
+    } else if (options.completed) {
         records = await store.getCompleted();
     } else {
         records = await store.getIncomplete();
