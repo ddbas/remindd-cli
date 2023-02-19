@@ -71,16 +71,12 @@ program
 program
     .command('list')
     .description('List the reminders.')
+    .option('-c, --completed', 'List the completed reminders.')
     .option('-h, --header', 'Show to columns headers.')
     .option('-i, --interactive', '(Not implemented) Run in interactive mode.')
-    .option(
-        '-l, --live',
-        '(Not implemented) Same as --interactive, but the output updates regularly.'
-    )
-    .option('-p, --pretty', '(Not implemented) Print in a structured format.')
     .action(async (options) => {
-        const { header = false } = options;
-        await list({ header });
+        const { completed = false, header = false } = options;
+        await list({ completed, header });
     });
 
 program

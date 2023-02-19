@@ -2,11 +2,18 @@ import getFormatter, { FormattableRecord } from '../format.js';
 import store from '../store/index.js';
 
 type Options = {
+    completed: boolean;
     header: boolean;
 };
 
 const list = async (options: Options): Promise<void> => {
-    const records = await store.getIncomplete();
+    let records;
+    if (options.completed) {
+        records = await store.getCompleted();
+    } else {
+        records = await store.getIncomplete();
+    }
+
     if (!records.length) {
         console.log('No reminders.');
         return;
