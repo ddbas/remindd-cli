@@ -1,3 +1,13 @@
+# [1.3.0](https://github.com/ddbas/remindd-cli/compare/v1.2.0...v1.3.0) (2023-02-19)
+
+
+### Features
+
+* list all reminders ([4d37c97](https://github.com/ddbas/remindd-cli/commit/4d37c9790f579d8f4fc41302dbaa38c7e05c94ae))
+* list completed reminders ([6fc5fbb](https://github.com/ddbas/remindd-cli/commit/6fc5fbbdee3b9f906c049396cb6a7ac239d630d0))
+
+
+
 # [1.2.0](https://github.com/ddbas/remindd-cli/compare/v1.1.0...v1.2.0) (2023-02-19)
 
 
