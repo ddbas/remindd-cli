@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import { readFileSync } from 'node:fs';
 
 import {
     complete,
@@ -13,9 +14,18 @@ import {
     reschedule,
 } from './commands/index.js';
 
+const { version } = JSON.parse(
+    readFileSync(new URL('../package.json', import.meta.url), {
+        encoding: 'utf8',
+    })
+);
+
 const program = new Command();
 
-program.name('remind').description('A natural language reminder CLI.');
+program
+    .name('remind')
+    .version(version, '-v, --version')
+    .description('A natural language reminder CLI.');
 
 program
     .command('complete')
