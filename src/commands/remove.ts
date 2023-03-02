@@ -1,15 +1,19 @@
+import execute from '../execute.js';
 import getFormatter, { FormattableRecord } from '../format.js';
 import { record as recordPrompt } from '../prompts/index.js';
 import makeSearcher from '../search.js';
 import store, { Record } from '../store/index.js';
 
 type Options = {
+    executeCommand?: string;
     search: boolean;
 };
 
-const remove = async (searchText: string, options: Options): Promise<void> => {
+const remove = async (
+    reminderText: string | undefined,
+    options: Options
+): Promise<void> => {
     const records = await store.getIncomplete();
-
     if (!records.length) {
         throw new Error('There are no reminders.');
     }
@@ -18,15 +22,24 @@ const remove = async (searchText: string, options: Options): Promise<void> => {
 
     let record;
     if (options.search) {
-        record = await recordPrompt(searchText, records);
+        record = await recordPrompt(reminderText || '', records);
+        if (!record) {
+            return;
+        }
+    } else if (options.executeCommand) {
+        record = await execute(options.executeCommand, records);
         if (!record) {
             return;
         }
     } else {
+        if (!reminderText) {
+            throw new Error('No reminder provided.');
+        }
+
         const toString = (record: Record) =>
             format(new FormattableRecord(record));
         const search = makeSearcher(records, toString);
-        const results = search(searchText);
+        const results = search(reminderText);
         if (!results.length) {
             throw new Error('No match found.');
         } else if (results.length > 1) {

@@ -1,11 +1,13 @@
 import remind from '@remindd/core';
 
+import execute from '../execute.js';
 import getFormatter, { FormattableRecord } from '../format.js';
 import { record as recordPrompt } from '../prompts/index.js';
 import makeSearcher from '../search.js';
 import store, { Record } from '../store/index.js';
 
 type Options = {
+    executeCommand?: string;
     search: boolean;
 };
 
@@ -18,6 +20,11 @@ const reschedule = async (text: string, options: Options): Promise<void> => {
     let record;
     if (options.search) {
         record = await recordPrompt(searchText, records);
+        if (!record) {
+            return;
+        }
+    } else if (options.executeCommand) {
+        record = await execute(options.executeCommand, records);
         if (!record) {
             return;
         }

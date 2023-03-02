@@ -31,11 +31,17 @@ program
     .command('complete')
     .description('Complete a reminder.')
     .argument('[reminder...]', 'The text of the reminder.')
-    .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
+    .option('-s, --search', 'Renders an fuzzy search prompt.')
+    .option(
+        '-e, --execute <command>',
+        'A command used to search the list of reminders. The output of the command is the reminder to complete.'
+    )
     .action(async (reminderWords, options) => {
-        const { search = false } = options;
-        const reminderText = reminderWords.join(' ');
-        await complete(reminderText, { search });
+        const { execute: executeCommand, search = false } = options;
+        const reminderText = reminderWords.length
+            ? reminderWords.join(' ')
+            : undefined;
+        await complete(reminderText, { executeCommand, search });
     });
 
 const daemon = program.command('daemon').description('`remindd` daemon.');
@@ -96,11 +102,17 @@ program
     .command('remove')
     .description('Remove a reminder.')
     .argument('[reminder...]', 'The text of the reminder.')
-    .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
+    .option('-s, --search', 'Renders an fuzzy search prompt.')
+    .option(
+        '-e, --execute <command>',
+        'A command used to search the list of reminders. The output of the command is the reminder to remove.'
+    )
     .action(async (reminderWords, options) => {
-        const { search = false } = options;
-        const reminderText = reminderWords.join(' ');
-        await remove(reminderText, { search });
+        const { execute: executeCommand, search = false } = options;
+        const reminderText = reminderWords.length
+            ? reminderWords.join(' ')
+            : undefined;
+        await remove(reminderText, { executeCommand, search });
     });
 
 program
@@ -110,11 +122,15 @@ program
         '<reminder...>',
         'The reminder information, including the date and time.'
     )
-    .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
+    .option('-s, --search', 'Renders an fuzzy search prompt.')
+    .option(
+        '-e, --execute <command>',
+        'A command used to search the list of reminders. The output of the command is the reminder to reschedule. When using this option, only the date and time information in the <reminder...> argument will be used.'
+    )
     .action(async (reminderWords, options) => {
-        const { search = false } = options;
+        const { execute: executeCommand, search = false } = options;
         const reminderText = reminderWords.join(' ');
-        await reschedule(reminderText, { search });
+        await reschedule(reminderText, { executeCommand, search });
     });
 
 program.parse(process.argv);
