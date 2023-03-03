@@ -11,13 +11,16 @@ type Options = {
     search: boolean;
 };
 
-const reschedule = async (text: string, options: Options): Promise<void> => {
-    const { date, title: searchText } = remind(text);
+const reschedule = async (
+    reminderText: string,
+    options: Options
+): Promise<void> => {
+    const { date, title: query } = remind(reminderText);
     const records = await store.getIncomplete();
 
     let record;
     if (options.search) {
-        record = await recordPrompt(searchText, records);
+        record = await recordPrompt(query, records);
         if (!record) {
             return;
         }
@@ -27,8 +30,12 @@ const reschedule = async (text: string, options: Options): Promise<void> => {
             return;
         }
     } else {
+        if (!query) {
+            throw new Error('No query provided.');
+        }
+
         const search = makeSearcher(records);
-        const results = search(searchText);
+        const results = search(query);
         if (!results.length) {
             throw new Error('No match found.');
         } else if (results.length > 1) {

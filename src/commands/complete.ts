@@ -10,7 +10,7 @@ type Options = {
 };
 
 const complete = async (
-    reminderText: string | undefined,
+    query: string | undefined,
     options: Options
 ): Promise<void> => {
     const records = await store.getIncomplete();
@@ -20,7 +20,7 @@ const complete = async (
 
     let record;
     if (options.search) {
-        record = await recordPrompt(reminderText || '', records);
+        record = await recordPrompt(query || '', records);
         if (!record) {
             return;
         }
@@ -30,12 +30,12 @@ const complete = async (
             return;
         }
     } else {
-        if (!reminderText) {
-            throw new Error('No reminder provided.');
+        if (!query) {
+            throw new Error('No query provided.');
         }
 
         const search = makeSearcher(records);
-        const results = search(reminderText);
+        const results = search(query);
         if (!results.length) {
             throw new Error('No match found.');
         } else if (results.length > 1) {

@@ -20,12 +20,12 @@ Options:
   -h, --help                          display help for command
 
 Commands:
-  complete [options] [reminder...]    Complete a reminder.
+  complete [options] [query...]       Complete a reminder.
   daemon                              `remindd` daemon.
   info                                Prints information about the current installation.
   list [options]                      List the reminders.
   me <reminder...>                    Create a reminder.
-  remove [options] [reminder...]      Remove a reminder.
+  remove [options] [query...]         Remove a reminder.
   reschedule [options] <reminder...>  Reschedule a reminder.
   help [command]                      display help for command
 ```
