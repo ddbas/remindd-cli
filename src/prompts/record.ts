@@ -42,9 +42,7 @@ class RecordPrompt {
         this.selectionIndex = 0;
         this.startIndex = 0;
         this.format = getFormatter();
-        const toString = (record: Record) =>
-            this.format(new FormattableRecord(record));
-        this.search = makeSearcher(this.records, toString);
+        this.search = makeSearcher(this.records);
     }
 
     keypress(input: string, keypress: Keypress): string | undefined {

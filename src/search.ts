@@ -1,5 +1,6 @@
 import { Fzf } from 'fzf';
 
+import getFormatter, { FormattableRecord } from './format.js';
 import { Record } from './store/index.js';
 
 type FzfSearchResult = {
@@ -21,9 +22,10 @@ type SearchResult = {
 };
 
 const makeSearcher = (
-    records: Record[],
-    toString: (record: Record) => string
+    records: Record[]
 ): ((query: string) => SearchResult[]) => {
+    const format = getFormatter();
+    const toString = (record: Record) => format(new FormattableRecord(record));
     const fzf = new Fzf(records, {
         selector: toString,
     });

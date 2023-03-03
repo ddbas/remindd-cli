@@ -30,12 +30,19 @@ program
 program
     .command('complete')
     .description('Complete a reminder.')
-    .argument('[reminder...]', 'The text of the reminder.')
-    .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
-    .action(async (reminderWords, options) => {
-        const { search = false } = options;
-        const reminderText = reminderWords.join(' ');
-        await complete(reminderText, { search });
+    .argument(
+        '[query...]',
+        "A full or partial match of the reminder's title or id."
+    )
+    .option('-s, --search', 'Renders a fuzzy search prompt.')
+    .option(
+        '-e, --execute <command>',
+        'A command used to search the list of reminders. The output of the command is the reminder to complete.'
+    )
+    .action(async (queryWords, options) => {
+        const { execute: executeCommand, search = false } = options;
+        const query = queryWords.length ? queryWords.join(' ') : undefined;
+        await complete(query, { executeCommand, search });
     });
 
 const daemon = program.command('daemon').description('`remindd` daemon.');
@@ -95,12 +102,19 @@ program
 program
     .command('remove')
     .description('Remove a reminder.')
-    .argument('[reminder...]', 'The text of the reminder.')
-    .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
-    .action(async (reminderWords, options) => {
-        const { search = false } = options;
-        const reminderText = reminderWords.join(' ');
-        await remove(reminderText, { search });
+    .argument(
+        '[query...]',
+        "A full or partial match of the reminder's title or id."
+    )
+    .option('-s, --search', 'Renders a fuzzy search prompt.')
+    .option(
+        '-e, --execute <command>',
+        'A command used to search the list of reminders. The output of the command is the reminder to remove.'
+    )
+    .action(async (queryWords, options) => {
+        const { execute: executeCommand, search = false } = options;
+        const query = queryWords.length ? queryWords.join(' ') : undefined;
+        await remove(query, { executeCommand, search });
     });
 
 program
@@ -108,13 +122,17 @@ program
     .description('Reschedule a reminder.')
     .argument(
         '<reminder...>',
-        'The reminder information, including the date and time.'
+        "A full or partial match of the reminder's title or id, as well as the date and/or time to reschedule to."
     )
-    .option('-s, --search', 'Renders an interactive fuzzy search prompt.')
+    .option('-s, --search', 'Renders a fuzzy search prompt.')
+    .option(
+        '-e, --execute <command>',
+        'A command used to search the list of reminders. The output of the command is the reminder to reschedule. When using this option, only the date and time information in the <reminder...> argument will be used.'
+    )
     .action(async (reminderWords, options) => {
-        const { search = false } = options;
+        const { execute: executeCommand, search = false } = options;
         const reminderText = reminderWords.join(' ');
-        await reschedule(reminderText, { search });
+        await reschedule(reminderText, { executeCommand, search });
     });
 
 program.parse(process.argv);
