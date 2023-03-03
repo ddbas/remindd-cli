@@ -2,7 +2,7 @@ import execute from '../execute.js';
 import getFormatter, { FormattableRecord } from '../format.js';
 import { record as recordPrompt } from '../prompts/index.js';
 import makeSearcher from '../search.js';
-import store, { Record } from '../store/index.js';
+import store from '../store/index.js';
 
 type Options = {
     executeCommand?: string;
@@ -17,8 +17,6 @@ const complete = async (
     if (!records.length) {
         throw new Error('There are no reminders.');
     }
-
-    const format = getFormatter();
 
     let record;
     if (options.search) {
@@ -36,9 +34,7 @@ const complete = async (
             throw new Error('No reminder provided.');
         }
 
-        const toString = (record: Record) =>
-            format(new FormattableRecord(record));
-        const search = makeSearcher(records, toString);
+        const search = makeSearcher(records);
         const results = search(reminderText);
         if (!results.length) {
             throw new Error('No match found.');
@@ -51,6 +47,7 @@ const complete = async (
 
     await store.complete(record);
 
+    const format = getFormatter();
     const formattableRecord = new FormattableRecord(record);
     const recordText = format(formattableRecord);
     const output = `Reminder completed.\n${recordText}`;

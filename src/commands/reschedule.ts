@@ -4,7 +4,7 @@ import execute from '../execute.js';
 import getFormatter, { FormattableRecord } from '../format.js';
 import { record as recordPrompt } from '../prompts/index.js';
 import makeSearcher from '../search.js';
-import store, { Record } from '../store/index.js';
+import store from '../store/index.js';
 
 type Options = {
     executeCommand?: string;
@@ -14,8 +14,6 @@ type Options = {
 const reschedule = async (text: string, options: Options): Promise<void> => {
     const { date, title: searchText } = remind(text);
     const records = await store.getIncomplete();
-
-    const format = getFormatter();
 
     let record;
     if (options.search) {
@@ -29,9 +27,7 @@ const reschedule = async (text: string, options: Options): Promise<void> => {
             return;
         }
     } else {
-        const toString = (record: Record) =>
-            format(new FormattableRecord(record));
-        const search = makeSearcher(records, toString);
+        const search = makeSearcher(records);
         const results = search(searchText);
         if (!results.length) {
             throw new Error('No match found.');
@@ -45,6 +41,7 @@ const reschedule = async (text: string, options: Options): Promise<void> => {
     record.reminder.date = date;
     await store.update(record);
 
+    const format = getFormatter();
     const formattableRecord = new FormattableRecord(record);
     const recordText = format(formattableRecord);
     const output = `Reminder rescheduled.\n${recordText}`;
