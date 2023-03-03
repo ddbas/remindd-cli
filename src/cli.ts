@@ -31,7 +31,7 @@ program
     .command('complete')
     .description('Complete a reminder.')
     .argument('[reminder...]', 'The text of the reminder.')
-    .option('-s, --search', 'Renders an fuzzy search prompt.')
+    .option('-s, --search', 'Renders a fuzzy search prompt.')
     .option(
         '-e, --execute <command>',
         'A command used to search the list of reminders. The output of the command is the reminder to complete.'
@@ -102,7 +102,7 @@ program
     .command('remove')
     .description('Remove a reminder.')
     .argument('[reminder...]', 'The text of the reminder.')
-    .option('-s, --search', 'Renders an fuzzy search prompt.')
+    .option('-s, --search', 'Renders a fuzzy search prompt.')
     .option(
         '-e, --execute <command>',
         'A command used to search the list of reminders. The output of the command is the reminder to remove.'
@@ -122,7 +122,7 @@ program
         '<reminder...>',
         'The reminder information, including the date and time.'
     )
-    .option('-s, --search', 'Renders an fuzzy search prompt.')
+    .option('-s, --search', 'Renders a fuzzy search prompt.')
     .option(
         '-e, --execute <command>',
         'A command used to search the list of reminders. The output of the command is the reminder to reschedule. When using this option, only the date and time information in the <reminder...> argument will be used.'
