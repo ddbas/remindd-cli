@@ -16,6 +16,7 @@ Usage: remind [options] [command]
 A natural language reminder CLI.
 
 Options:
+  -v, --version                       output the version number
   -h, --help                          display help for command
 
 Commands:
