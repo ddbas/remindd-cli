@@ -1,6 +1,6 @@
 import execute from '../execute.js';
 import getFormatter, { FormattableRecord } from '../format.js';
-import { record as recordPrompt } from '../prompts/index.js';
+import prompt from '../prompt/index.js';
 import makeSearcher from '../search.js';
 import store from '../store/index.js';
 
@@ -20,7 +20,7 @@ const complete = async (
 
     let record;
     if (options.search) {
-        record = await recordPrompt(query || '', records);
+        record = await prompt(query || '', records);
         if (!record) {
             return;
         }
