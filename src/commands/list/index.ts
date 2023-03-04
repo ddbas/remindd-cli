@@ -1,13 +1,20 @@
-import getFormatter, { FormattableRecord } from '../format.js';
-import store from '../store/index.js';
+import getFormatter, { FormattableRecord } from '../../format.js';
+import interactive from './interactive.js';
+import store from '../../store/index.js';
 
 type Options = {
     all: boolean;
     completed: boolean;
     header: boolean;
+    interactive: boolean;
 };
 
 const list = async (options: Options): Promise<void> => {
+    if (options.interactive) {
+        interactive();
+        return;
+    }
+
     let records;
     if (options.all) {
         const promise = Promise.all([
