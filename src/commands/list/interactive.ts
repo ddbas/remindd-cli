@@ -3,6 +3,7 @@ import * as readline from 'node:readline';
 
 import getFormatter, { FormattableRecord } from '../../format.js';
 import store, { Record } from '../../store/index.js';
+import { formattableHeader } from './utils.js';
 
 const SYNC_INTERVAL = 5000;
 
@@ -54,13 +55,13 @@ const interactive = () => {
     );
 
     const format = getFormatter();
+    const headerRow = format(formattableHeader);
     const render = (records: Record[]) => {
-        const content = records
-            .map((record) => {
-                const formattableRecord = new FormattableRecord(record);
-                return format(formattableRecord);
-            })
-            .join('\n');
+        const rows = records.map((record) => {
+            const formattableRecord = new FormattableRecord(record);
+            return format(formattableRecord);
+        });
+        const content = [headerRow, ...rows].join('\n');
 
         stdout.write(content);
     };
