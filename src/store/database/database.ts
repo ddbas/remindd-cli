@@ -44,11 +44,10 @@ const makeDatabase = async (fileName: string): Promise<Database> => {
         // Store not created yet.
     }
 
-    const storeDirectory = path.dirname(app.paths.store);
     try {
-        await fs.mkdir(storeDirectory, { recursive: true });
+        await fs.mkdir(app.paths.store, { recursive: true });
         await fs.writeFile(storePath, JSON.stringify({}));
-    } catch {
+    } catch (error) {
         throw new Error('Failed to create the store.');
     }
 
