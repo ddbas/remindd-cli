@@ -121,12 +121,20 @@ class InteractiveList {
             const formattableRecord = new FormattableRecord(record);
             const inPast = record.reminder.date.getTime() - Date.now() < 0;
             if (index === this.selectionIndex) {
+                if (inPast) {
+                    return `\x1B[31m\x1B[7m${this.format(
+                        formattableRecord
+                    )}\x1B[0m`;
+                }
+
                 return `\x1B[7m${this.format(formattableRecord)}\x1B[0m`;
-            } else if (inPast) {
-                return `\x1B[31m${this.format(formattableRecord)}\x1B[0m`;
-            } else {
-                return this.format(formattableRecord);
             }
+
+            if (inPast) {
+                return `\x1B[31m${this.format(formattableRecord)}\x1B[0m`;
+            }
+
+            return this.format(formattableRecord);
         });
         const content = [headerRow, ...rows].join('\n');
 
