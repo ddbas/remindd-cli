@@ -7,7 +7,7 @@ const DEFAULT_LIMIT = 10;
 
 const getHighlightedText = (text: string, matches: Match[]): string => {
     const greenStart = '\x1b[32m';
-    const greenEnd = '\x1b[39m';
+    const greenEnd = '\x1b[0m';
     return matches.reduce((highlightedText, match) => {
         const { start, end } = match;
         let offset = highlightedText.length - text.length;
