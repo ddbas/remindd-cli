@@ -11,12 +11,13 @@ class InteractiveList {
     format: (f: Formattable) => string;
     onExit: () => void;
     records: Record[];
-    selectionId: string | undefined; // record id
+    selectionIndex: number;
 
     constructor(records: Record[], onExit: () => void) {
         this.format = getFormatter();
         this.onExit = onExit;
         this.records = records;
+        this.selectionIndex = 0;
 
         stdin.on('keypress', this.keypress.bind(this));
     }
@@ -31,7 +32,7 @@ class InteractiveList {
         this.onExit();
     }
 
-    private keypress(
+    private async keypress(
         _: string,
         key: {
             name: string;
@@ -56,44 +57,69 @@ class InteractiveList {
 
         if (key.name === 'up') {
             const records = this.records;
-            const currentSelectionIndex = records.findIndex(
-                (record) => record.id === this.selectionId
-            );
-            const newSelectionIndex = Math.max(currentSelectionIndex - 1, 0);
-            this.selectionId = records[newSelectionIndex].id;
+            if (!records.length) {
+                return;
+            }
+
+            this.selectionIndex = Math.max(this.selectionIndex - 1, 0);
             this.update();
             return;
         }
 
         if (key.name === 'down') {
             const records = this.records;
-            const currentSelectionIndex = this.selectionId
-                ? records.findIndex((record) => record.id === this.selectionId)
-                : 0;
-            const newSelectionIndex = Math.min(
-                currentSelectionIndex + 1,
+            if (!records.length) {
+                return;
+            }
+
+            this.selectionIndex = Math.min(
+                this.selectionIndex + 1,
                 records.length - 1
             );
-            this.selectionId = records[newSelectionIndex].id;
+            this.update();
+            return;
+        }
+
+        if (key.name === 'c') {
+            const records = this.records;
+            if (!records.length) {
+                return;
+            }
+
+            const record = records[this.selectionIndex];
+            await store.complete(record);
+            this.selectionIndex = Math.max(
+                Math.min(this.selectionIndex, records.length - 2),
+                0
+            );
+
+            this.update();
+            return;
+        }
+
+        if (key.name === 'd' || key.name === 'backspace') {
+            const records = this.records;
+            if (!records.length) {
+                return;
+            }
+
+            const record = records[this.selectionIndex];
+            await store.remove(record);
+            this.selectionIndex = Math.max(
+                Math.min(this.selectionIndex, records.length - 2),
+                0
+            );
+
             this.update();
             return;
         }
     }
 
     private render() {
-        const selectionIndex = this.selectionId
-            ? Math.max(
-                  this.records.findIndex(
-                      (record) => record.id === this.selectionId
-                  ),
-                  0
-              )
-            : 0;
-
         const headerRow = this.format(formattableHeader);
         const rows = this.records.map((record, index) => {
             const formattableRecord = new FormattableRecord(record);
-            if (index === selectionIndex) {
+            if (index === this.selectionIndex) {
                 return `\x1B[7m${this.format(formattableRecord)}\x1B[m`;
             } else {
                 return this.format(formattableRecord);
@@ -105,12 +131,26 @@ class InteractiveList {
     }
 
     async update() {
+        const oldRecords = this.records;
         this.records = await store.getIncomplete();
-        const currentSelectionIndex = this.records.findIndex(
-            (record) => record.id === this.selectionId
+        if (!oldRecords.length) {
+            this.selectionIndex = 0;
+            this.clear();
+            this.render();
+            return;
+        }
+
+        const selectionId = oldRecords[this.selectionIndex].id;
+        const newSelectionIndex = this.records.findIndex(
+            (record) => record.id === selectionId
         );
-        if (currentSelectionIndex === -1) {
-            this.selectionId = undefined;
+        if (newSelectionIndex === -1) {
+            this.selectionIndex = Math.max(
+                Math.min(this.selectionIndex, this.records.length - 1),
+                0
+            );
+        } else {
+            this.selectionIndex = newSelectionIndex;
         }
 
         this.clear();
