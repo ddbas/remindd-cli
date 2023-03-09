@@ -119,8 +119,11 @@ class InteractiveList {
         const headerRow = this.format(formattableHeader);
         const rows = this.records.map((record, index) => {
             const formattableRecord = new FormattableRecord(record);
+            const inPast = record.reminder.date.getTime() - Date.now() < 0;
             if (index === this.selectionIndex) {
-                return `\x1B[7m${this.format(formattableRecord)}\x1B[m`;
+                return `\x1B[7m${this.format(formattableRecord)}\x1B[0m`;
+            } else if (inPast) {
+                return `\x1B[31m${this.format(formattableRecord)}\x1B[0m`;
             } else {
                 return this.format(formattableRecord);
             }
