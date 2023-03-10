@@ -11,13 +11,12 @@ class InteractiveList {
     format: (f: Formattable) => string;
     onExit: () => void;
     records: Record[];
-    selectionIndex: number;
+    selectionIndex: number | undefined;
 
     constructor(records: Record[], onExit: () => void) {
         this.format = getFormatter();
         this.onExit = onExit;
         this.records = records;
-        this.selectionIndex = 0;
 
         stdin.on('keypress', this.keypress.bind(this));
     }
@@ -46,6 +45,12 @@ class InteractiveList {
             return;
         }
 
+        if (key.meta && key.name === 'escape') {
+            this.selectionIndex = undefined;
+            this.update();
+            return;
+        }
+
         if (key.ctrl || key.meta || key.shift) {
             return;
         }
@@ -61,7 +66,8 @@ class InteractiveList {
                 return;
             }
 
-            this.selectionIndex = Math.max(this.selectionIndex - 1, 0);
+            const currentSelectionIndex = this.selectionIndex || 0;
+            this.selectionIndex = Math.max(currentSelectionIndex - 1, 0);
             this.update();
             return;
         }
@@ -72,20 +78,24 @@ class InteractiveList {
                 return;
             }
 
-            this.selectionIndex = Math.min(
-                this.selectionIndex + 1,
-                records.length - 1
-            );
+            if (this.selectionIndex != undefined) {
+                this.selectionIndex = Math.min(
+                    this.selectionIndex + 1,
+                    records.length - 1
+                );
+            } else {
+                this.selectionIndex = 0;
+            }
             this.update();
             return;
         }
 
-        if (key.name === 'c') {
-            const records = this.records;
-            if (!records.length) {
-                return;
-            }
+        const records = this.records;
+        if (!records.length || this.selectionIndex == undefined) {
+            return;
+        }
 
+        if (key.name === 'c') {
             const record = records[this.selectionIndex];
             await store.complete(record);
             this.selectionIndex = Math.max(
@@ -98,11 +108,6 @@ class InteractiveList {
         }
 
         if (key.name === 'd' || key.name === 'backspace') {
-            const records = this.records;
-            if (!records.length) {
-                return;
-            }
-
             const record = records[this.selectionIndex];
             await store.remove(record);
             this.selectionIndex = Math.max(
@@ -151,17 +156,19 @@ class InteractiveList {
             return;
         }
 
-        const selectionId = oldRecords[this.selectionIndex].id;
-        const newSelectionIndex = this.records.findIndex(
-            (record) => record.id === selectionId
-        );
-        if (newSelectionIndex === -1) {
-            this.selectionIndex = Math.max(
-                Math.min(this.selectionIndex, this.records.length - 1),
-                0
+        if (this.selectionIndex != undefined) {
+            const selectionId = oldRecords[this.selectionIndex].id;
+            const newSelectionIndex = this.records.findIndex(
+                (record) => record.id === selectionId
             );
-        } else {
-            this.selectionIndex = newSelectionIndex;
+            if (newSelectionIndex === -1) {
+                this.selectionIndex = Math.max(
+                    Math.min(this.selectionIndex, this.records.length - 1),
+                    0
+                );
+            } else {
+                this.selectionIndex = newSelectionIndex;
+            }
         }
 
         this.clear();
