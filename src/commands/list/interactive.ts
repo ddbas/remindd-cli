@@ -7,14 +7,45 @@ import { formattableHeader } from './utils.js';
 
 const SYNC_INTERVAL = 5000;
 
+enum ModeType {
+    Normal,
+    Reschedule,
+    Search,
+    Selection,
+}
+
+interface Mode {
+    readonly type: ModeType;
+}
+
+class NormalMode implements Mode {
+    readonly type = ModeType.Normal;
+}
+
+class RescheduleMode implements Mode {
+    readonly type = ModeType.Reschedule;
+    dateText = '';
+}
+
+class SearchMode implements Mode {
+    readonly type = ModeType.Search;
+    query = '';
+}
+
+class SelectionMode implements Mode {
+    readonly type = ModeType.Selection;
+    index = 0;
+}
+
 class InteractiveList {
     format: (f: Formattable) => string;
+    mode: Mode;
     onExit: () => void;
     records: Record[];
-    selectionIndex: number | undefined;
 
     constructor(records: Record[], onExit: () => void) {
         this.format = getFormatter();
+        this.mode = new NormalMode();
         this.onExit = onExit;
         this.records = records;
 
@@ -46,7 +77,7 @@ class InteractiveList {
         }
 
         if (key.meta && key.name === 'escape') {
-            this.selectionIndex = undefined;
+            this.mode = new NormalMode();
             this.update();
             return;
         }
@@ -60,63 +91,62 @@ class InteractiveList {
             return;
         }
 
-        if (key.name === 'up') {
-            const records = this.records;
-            if (!records.length) {
+        if (this.mode.type === ModeType.Normal) {
+            if (key.name === 'up' || key.name === 'down') {
+                const records = this.records;
+                if (!records.length) {
+                    return;
+                }
+
+                this.mode = new SelectionMode();
+                this.update();
                 return;
             }
-
-            const currentSelectionIndex = this.selectionIndex || 0;
-            this.selectionIndex = Math.max(currentSelectionIndex - 1, 0);
-            this.update();
-            return;
         }
 
-        if (key.name === 'down') {
-            const records = this.records;
-            if (!records.length) {
+        if (this.mode.type === ModeType.Selection) {
+            const selectionMode = this.mode as SelectionMode;
+            if (key.name === 'up') {
+                selectionMode.index = Math.max(selectionMode.index - 1, 0);
+                this.update();
                 return;
             }
 
-            if (this.selectionIndex != undefined) {
-                this.selectionIndex = Math.min(
-                    this.selectionIndex + 1,
+            if (key.name === 'down') {
+                const records = this.records;
+                selectionMode.index = Math.min(
+                    selectionMode.index + 1,
                     records.length - 1
                 );
-            } else {
-                this.selectionIndex = 0;
+                this.update();
+                return;
             }
-            this.update();
-            return;
-        }
 
-        const records = this.records;
-        if (!records.length || this.selectionIndex == undefined) {
-            return;
-        }
+            if (key.name === 'c') {
+                const records = this.records;
+                const record = records[selectionMode.index];
+                await store.complete(record);
+                selectionMode.index = Math.max(
+                    Math.min(selectionMode.index, records.length - 2),
+                    0
+                );
 
-        if (key.name === 'c') {
-            const record = records[this.selectionIndex];
-            await store.complete(record);
-            this.selectionIndex = Math.max(
-                Math.min(this.selectionIndex, records.length - 2),
-                0
-            );
+                this.update();
+                return;
+            }
 
-            this.update();
-            return;
-        }
+            if (key.name === 'd' || key.name === 'backspace') {
+                const records = this.records;
+                const record = records[selectionMode.index];
+                await store.remove(record);
+                selectionMode.index = Math.max(
+                    Math.min(selectionMode.index, records.length - 2),
+                    0
+                );
 
-        if (key.name === 'd' || key.name === 'backspace') {
-            const record = records[this.selectionIndex];
-            await store.remove(record);
-            this.selectionIndex = Math.max(
-                Math.min(this.selectionIndex, records.length - 2),
-                0
-            );
-
-            this.update();
-            return;
+                this.update();
+                return;
+            }
         }
     }
 
@@ -124,22 +154,24 @@ class InteractiveList {
         const headerRow = this.format(formattableHeader);
         const rows = this.records.map((record, index) => {
             const formattableRecord = new FormattableRecord(record);
+            const formattedRecord = this.format(formattableRecord);
             const inPast = record.reminder.date.getTime() - Date.now() < 0;
-            if (index === this.selectionIndex) {
-                if (inPast) {
-                    return `\x1B[31m\x1B[7m${this.format(
-                        formattableRecord
-                    )}\x1B[0m`;
-                }
+            if (this.mode.type === ModeType.Selection) {
+                const selectionMode = this.mode as SelectionMode;
+                if (index === selectionMode.index) {
+                    if (inPast) {
+                        return `\x1B[31m\x1B[7m${formattedRecord}\x1B[0m`;
+                    }
 
-                return `\x1B[7m${this.format(formattableRecord)}\x1B[0m`;
+                    return `\x1B[7m${formattedRecord}\x1B[0m`;
+                }
             }
 
             if (inPast) {
-                return `\x1B[31m${this.format(formattableRecord)}\x1B[0m`;
+                return `\x1B[31m${formattedRecord}\x1B[0m`;
             }
 
-            return this.format(formattableRecord);
+            return formattedRecord;
         });
         const content = [headerRow, ...rows].join('\n');
 
@@ -150,24 +182,25 @@ class InteractiveList {
         const oldRecords = this.records;
         this.records = await store.getIncomplete();
         if (!oldRecords.length) {
-            this.selectionIndex = 0;
+            this.mode = new NormalMode();
             this.clear();
             this.render();
             return;
         }
 
-        if (this.selectionIndex != undefined) {
-            const selectionId = oldRecords[this.selectionIndex].id;
+        if (this.mode.type === ModeType.Selection) {
+            const selectionMode = this.mode as SelectionMode;
+            const selectionId = oldRecords[selectionMode.index].id;
             const newSelectionIndex = this.records.findIndex(
                 (record) => record.id === selectionId
             );
             if (newSelectionIndex === -1) {
-                this.selectionIndex = Math.max(
-                    Math.min(this.selectionIndex, this.records.length - 1),
+                selectionMode.index = Math.max(
+                    Math.min(selectionMode.index, this.records.length - 1),
                     0
                 );
             } else {
-                this.selectionIndex = newSelectionIndex;
+                selectionMode.index = newSelectionIndex;
             }
         }
 
