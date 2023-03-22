@@ -1,5 +1,5 @@
 import getFormatter, { FormattableRecord } from '../../format.js';
-import interactive from './interactive.js';
+import interactive from './interactive/index.js';
 import store from '../../store/index.js';
 import { formattableHeader } from './utils.js';
 
