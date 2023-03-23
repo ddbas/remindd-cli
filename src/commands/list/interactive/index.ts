@@ -7,12 +7,6 @@ import store, { Record } from '../../../store/index.js';
 
 const SYNC_INTERVAL = 5000;
 
-/*
-1. modes manage state by reacting to keypresses, and updates to records
-2. renderer renders the terminal, based on the current mode's state.
-3. interactive-list maintains the current mode, calls its callbacks, and calls the terminal renderer.
-*/
-
 class InteractiveList {
     mode: Mode;
     onExit: () => void;
@@ -41,10 +35,7 @@ class InteractiveList {
             shift: boolean;
         }
     ) {
-        if (
-            (key.ctrl && key.name === 'c') ||
-            (!key.ctrl && !key.meta && !key.shift && key.name === 'q')
-        ) {
+        if (key.ctrl && key.name === 'c') {
             this.exit();
             return;
         }

@@ -4,6 +4,7 @@ import getFormatter, {
 } from '../../../format.js';
 import { stdout } from 'node:process';
 import Mode from './modes/index.js';
+import SearchMode from './modes/search.js';
 import SelectionMode from './modes/selection.js';
 import { formattableHeader } from '../utils.js';
 
@@ -20,8 +21,20 @@ class Renderer {
     }
 
     render(mode: Mode) {
+        const rows = [];
+
+        if (mode instanceof SearchMode) {
+            const searchPromptRow = `Search: ${mode.query}`;
+            rows.push(searchPromptRow);
+        } else {
+            const emptyRow = '';
+            rows.push(emptyRow);
+        }
+
         const headerRow = this.format(formattableHeader);
-        const rows = mode.base.records.map((record, index) => {
+        rows.push(headerRow);
+
+        const recordRows = mode.base.records.map((record, index) => {
             const formattableRecord = new FormattableRecord(record);
             const formattedRecord = this.format(formattableRecord);
             let row = formattedRecord;
@@ -29,8 +42,7 @@ class Renderer {
             const inPast = record.reminder.date.getTime() - Date.now() < 0;
             let isFormatted = false;
             if (mode instanceof SelectionMode) {
-                const selectionMode = mode as SelectionMode;
-                if (index === selectionMode.index) {
+                if (index === mode.index) {
                     row = `\x1B[7m${row}`;
                     isFormatted = true;
                 }
@@ -47,8 +59,9 @@ class Renderer {
 
             return row;
         });
+        rows.push(...recordRows);
 
-        const content = [headerRow, ...rows].join('\n');
+        const content = rows.join('\n');
         stdout.write(content);
     }
 }

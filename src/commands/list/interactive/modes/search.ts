@@ -21,7 +21,14 @@ class SearchMode implements Mode {
             return result;
         }
 
-        return;
+        if (key.name === 'backspace') {
+            this.query = this.query.slice(0, -1);
+            return { update: true };
+        }
+
+        this.query += data;
+
+        return { update: true };
     }
 
     async update(): Promise<UpdateResult | undefined> {
