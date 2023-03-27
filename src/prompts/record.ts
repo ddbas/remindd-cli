@@ -1,4 +1,4 @@
-import getFormatter, { Formattable, FormattableRecord } from '../format.js';
+import { getRecordFormatter } from '../format.js';
 import prompt, { Keypress } from './prompt.js';
 import makeSearcher, { Match, SearchResult } from '../search.js';
 import { Record } from '../store/index.js';
@@ -27,11 +27,11 @@ const getHighlightedText = (text: string, matches: Match[]): string => {
 };
 
 class RecordPrompt {
-    private format: (f: Formattable) => string;
+    private format: (record: Record) => string;
     private limit: number;
     private records: Record[];
-    private results: SearchResult[];
-    private search: (query: string) => SearchResult[];
+    private results: SearchResult<Record>[];
+    private search: (query: string) => SearchResult<Record>[];
     private selectionIndex: number;
     private startIndex: number;
 
@@ -41,8 +41,8 @@ class RecordPrompt {
         this.records = records;
         this.selectionIndex = 0;
         this.startIndex = 0;
-        this.format = getFormatter();
-        this.search = makeSearcher(this.records);
+        this.format = getRecordFormatter();
+        this.search = makeSearcher(this.records, this.format);
     }
 
     keypress(input: string, keypress: Keypress): string | undefined {
@@ -73,9 +73,8 @@ class RecordPrompt {
                 return;
             }
 
-            const { record, matches } = result;
-            const resultText = this.format(new FormattableRecord(record));
-            const highlightedResult = getHighlightedText(resultText, matches);
+            const { matches, text: recordText } = result;
+            const highlightedResult = getHighlightedText(recordText, matches);
             if (this.selectionIndex === index) {
                 output += `> ${highlightedResult}`;
             } else {
@@ -102,7 +101,7 @@ class RecordPrompt {
             throw new Error('Failed to get the selected record.');
         }
 
-        const { record } = this.results[this.selectionIndex];
+        const { item: record } = this.results[this.selectionIndex];
         return record;
     }
 

@@ -1,4 +1,4 @@
-import getFormatter, { FormattableRecord } from '../format.js';
+import getFormatter, { getRecordFormatter } from '../format.js';
 import store from '../store/index.js';
 
 type Options = {
@@ -32,6 +32,7 @@ const list = async (options: Options): Promise<void> => {
     }
 
     const format = getFormatter();
+    const formatRecord = getRecordFormatter();
     const rows: string[] = [];
     if (options.header) {
         const formattableHeader = {
@@ -48,8 +49,7 @@ const list = async (options: Options): Promise<void> => {
         rows.push(format(formattableHeader));
     }
     records.forEach((record) => {
-        const formattableRecord = new FormattableRecord(record);
-        rows.push(format(formattableRecord));
+        rows.push(formatRecord(record));
     });
 
     console.log(rows.join('\n'));

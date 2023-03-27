@@ -1,39 +1,43 @@
 import { Fzf } from 'fzf';
 
-import getFormatter, { FormattableRecord } from './format.js';
-import { Record } from './store/index.js';
-
-type FzfSearchResult = {
-    item: Record;
+interface FzfSearchResult<Item> {
+    item: {
+        item: Item;
+        text: string;
+    };
     start: number;
     end: number;
     score: number;
     positions: Set<number>;
-};
+}
 
-type Match = {
+interface Match {
     start: number;
     end: number; // excluded from the match
-};
+}
 
-type SearchResult = {
-    record: Record;
+interface SearchResult<Item> {
+    item: Item;
     matches: Match[];
-};
+    text: string;
+}
 
-const makeSearcher = (
-    records: Record[]
-): ((query: string) => SearchResult[]) => {
-    const format = getFormatter();
-    const toString = (record: Record) => format(new FormattableRecord(record));
-    const fzf = new Fzf(records, {
-        selector: toString,
+const makeSearcher = <Item>(
+    items: Item[],
+    toString: (item: Item) => string
+): ((query: string) => SearchResult<Item>[]) => {
+    const textItems = items.map((item) => ({ item, text: toString(item) }));
+    const fzf = new Fzf(textItems, {
+        selector: (item: { item: Item; text: string }) => item.text,
     });
 
-    return (query: string): SearchResult[] => {
-        const results: FzfSearchResult[] = fzf.find(query);
+    return (query: string): SearchResult<Item>[] => {
+        const results: FzfSearchResult<Item>[] = fzf.find(query);
         return results.map((result) => {
-            const { item: record, positions } = result;
+            const {
+                item: { item, text },
+                positions,
+            } = result;
             const sortedIndices = Array.from(positions).sort((a, b) => a - b);
             let startValue = sortedIndices[0];
             let previousValue = startValue - 1;
@@ -56,8 +60,9 @@ const makeSearcher = (
                 return matches;
             }, [] as Match[]);
             return {
-                record,
+                item,
                 matches,
+                text,
             };
         });
     };
