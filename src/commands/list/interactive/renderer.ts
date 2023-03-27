@@ -1,18 +1,21 @@
 import getFormatter, {
     Formattable,
-    FormattableRecord,
+    getRecordFormatter,
 } from '../../../format.js';
 import { stdout } from 'node:process';
 import Mode from './modes/index.js';
 import SearchMode from './modes/search.js';
 import SelectionMode from './modes/selection.js';
+import { Record } from '../../../store/index.js';
 import { formattableHeader } from '../utils.js';
 
 class Renderer {
     private format: (f: Formattable) => string;
+    private formatRecord: (record: Record) => string;
 
     constructor() {
         this.format = getFormatter();
+        this.formatRecord = getRecordFormatter();
     }
 
     clear() {
@@ -35,9 +38,8 @@ class Renderer {
         rows.push(headerRow);
 
         const recordRows = mode.base.records.map((record, index) => {
-            const formattableRecord = new FormattableRecord(record);
-            const formattedRecord = this.format(formattableRecord);
-            let row = formattedRecord;
+            const recordText = this.formatRecord(record);
+            let row = recordText;
 
             const inPast = record.reminder.date.getTime() - Date.now() < 0;
             let isFormatted = false;

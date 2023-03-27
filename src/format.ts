@@ -85,6 +85,11 @@ const getFormatter = (
     };
 };
 
-export { Formattable, FormattableRecord };
+const getRecordFormatter = (template: string = DEFAULT_TEMPLATE) => {
+    const format = getFormatter(template);
+    return (record: Record) => format(new FormattableRecord(record));
+};
+
+export { Formattable, getRecordFormatter };
 
 export default getFormatter;

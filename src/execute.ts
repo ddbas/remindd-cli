@@ -1,6 +1,6 @@
 import childProcess from 'node:child_process';
 
-import getFormatter, { FormattableRecord } from './format.js';
+import { getRecordFormatter } from './format.js';
 import { Record as StoreRecord } from './store/index.js';
 
 const execute = (
@@ -8,12 +8,12 @@ const execute = (
     records: StoreRecord[]
 ): Promise<StoreRecord | undefined> => {
     // Generate remind list text
-    const format = getFormatter();
+    const format = getRecordFormatter();
     const rowToRecord: Record<string, StoreRecord> = {};
     const reminderListOutput =
         records
             .map((record) => {
-                const row = format(new FormattableRecord(record));
+                const row = format(record);
                 rowToRecord[row] = record;
                 return row;
             })
