@@ -6,6 +6,7 @@ import { stdout } from 'node:process';
 import Mode from './modes/index.js';
 import SearchMode from './modes/search.js';
 import SelectionMode from './modes/selection.js';
+import { getWrappedResultText } from '../../../search.js';
 import { Record } from '../../../store/index.js';
 import { formattableHeader } from '../utils.js';
 
@@ -37,7 +38,20 @@ class Renderer {
         const headerRow = this.format(formattableHeader);
         rows.push(headerRow);
 
-        const recordRows = mode.base.records.map((record, index) => {
+        if (mode instanceof SearchMode) {
+            const searchResultRows = this.getSearchResultRows(mode);
+            rows.push(...searchResultRows);
+        } else {
+            const recordRows = this.getRecordRows(mode);
+            rows.push(...recordRows);
+        }
+
+        const content = rows.join('\n');
+        stdout.write(content);
+    }
+
+    private getRecordRows(mode: Mode): string[] {
+        return mode.base.records.map((record, index) => {
             const recordText = this.formatRecord(record);
             let row = recordText;
 
@@ -61,10 +75,23 @@ class Renderer {
 
             return row;
         });
-        rows.push(...recordRows);
+    }
 
-        const content = rows.join('\n');
-        stdout.write(content);
+    private getSearchResultRows(searchMode: SearchMode): string[] {
+        return (searchMode.results || []).map((result) => {
+            const { item: record } = result;
+
+            let row;
+            const inPast = record.reminder.date.getTime() - Date.now() < 0;
+            if (inPast) {
+                row = getWrappedResultText(result, '\x1b[1m', '\x1b[22m'); // bold match
+                row = `\x1B[31m${row}\x1B[0m`; // highlight red
+            } else {
+                row = getWrappedResultText(result, '\x1b[32m', '\x1b[0m'); // green match
+            }
+
+            return row;
+        });
     }
 }
 

@@ -1,30 +1,9 @@
 import { getRecordFormatter } from '../format.js';
 import prompt, { Keypress } from './prompt.js';
-import makeSearcher, { Match, SearchResult } from '../search.js';
+import makeSearcher, { getWrappedResultText, SearchResult } from '../search.js';
 import { Record } from '../store/index.js';
 
 const DEFAULT_LIMIT = 10;
-
-const getHighlightedText = (text: string, matches: Match[]): string => {
-    const greenStart = '\x1b[32m';
-    const greenEnd = '\x1b[0m';
-    return matches.reduce((highlightedText, match) => {
-        const { start, end } = match;
-        let offset = highlightedText.length - text.length;
-        const offsetStart = start + offset;
-        const newHighlightedText =
-            highlightedText.slice(0, offsetStart) +
-            greenStart +
-            highlightedText.slice(offsetStart);
-        offset = newHighlightedText.length - text.length;
-        const offsetEnd = end + offset;
-        return (
-            newHighlightedText.slice(0, offsetEnd) +
-            greenEnd +
-            newHighlightedText.slice(offsetEnd)
-        );
-    }, text);
-};
 
 class RecordPrompt {
     private format: (record: Record) => string;
@@ -73,8 +52,11 @@ class RecordPrompt {
                 return;
             }
 
-            const { matches, text: recordText } = result;
-            const highlightedResult = getHighlightedText(recordText, matches);
+            const highlightedResult = getWrappedResultText(
+                result,
+                '\x1b[32m',
+                '\x1b[0m'
+            );
             if (this.selectionIndex === index) {
                 output += `> ${highlightedResult}`;
             } else {

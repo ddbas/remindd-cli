@@ -1,14 +1,19 @@
 import BaseMode from './base.js';
+import { getRecordFormatter } from '../../../../format.js';
 import Mode, { Key, KeypressResult, UpdateResult } from './mode.js';
+import makeSearcher, { SearchResult } from '../../../../search.js';
 import { Record } from '../../../../store/index.js';
+import SelectionMode from './selection.js';
 
 class SearchMode implements Mode {
     base: BaseMode;
-    filteredRecords: Record[] | undefined;
+    private format: (record: Record) => string;
     query: string;
+    results: SearchResult<Record>[] | undefined;
 
     constructor(base: BaseMode) {
         this.base = base;
+        this.format = getRecordFormatter();
         this.query = '';
     }
 
@@ -26,13 +31,23 @@ class SearchMode implements Mode {
             return { update: true };
         }
 
+        if (key.name === 'return' || key.name === 'enter') {
+            return { mode: new SelectionMode(this.base), update: true };
+        }
+
         this.query += data;
 
         return { update: true };
     }
 
     async update(): Promise<UpdateResult | undefined> {
-        return await this.base.update();
+        const result = await this.base.update();
+        if (result) {
+            return result;
+        }
+
+        const search = makeSearcher(this.base.records, this.format);
+        this.results = search(this.query);
     }
 }
 
