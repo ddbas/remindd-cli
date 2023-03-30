@@ -1,14 +1,14 @@
-import store from '../../../../store/index.js';
-import BaseMode from './base.js';
-import Mode, { Key, KeypressResult, UpdateResult } from './mode.js';
+import LiveStore from '../live-store.js';
+import Mode, { Key, KeypressResult } from './mode.js';
 import SearchMode from './search.js';
+import store, { Record } from '../../../../store/index.js';
 
 class SelectionMode implements Mode {
-    base: BaseMode;
+    liveStore: LiveStore;
     index: number;
 
-    constructor(base: BaseMode) {
-        this.base = base;
+    constructor(liveStore: LiveStore) {
+        this.liveStore = liveStore;
         this.index = 0;
     }
 
@@ -16,12 +16,16 @@ class SelectionMode implements Mode {
         data: string,
         key: Key
     ): Promise<KeypressResult | undefined> {
-        const result = await this.base.keypress(data, key);
-        if (result) {
-            return result;
+        if (key.ctrl || key.meta || key.shift) {
+            return;
         }
 
-        if (key.ctrl || key.meta || key.shift) {
+        if (data === '/') {
+            return { mode: new SearchMode(), update: true };
+        }
+
+        const records = this.liveStore.getRecords();
+        if (!records.length) {
             return;
         }
 
@@ -31,13 +35,11 @@ class SelectionMode implements Mode {
         }
 
         if (key.name === 'down') {
-            const records = this.base.records;
             this.index = Math.min(this.index + 1, records.length - 1);
             return { update: true };
         }
 
         if (key.name === 'c') {
-            const records = this.base.records;
             const record = records[this.index];
             await store.complete(record);
             this.index = Math.max(Math.min(this.index, records.length - 2), 0);
@@ -46,37 +48,27 @@ class SelectionMode implements Mode {
         }
 
         if (key.name === 'd' || key.name === 'backspace') {
-            const records = this.base.records;
             const record = records[this.index];
             await store.remove(record);
             this.index = Math.max(Math.min(this.index, records.length - 2), 0);
 
             return { update: true };
         }
-
-        if (data === '/') {
-            return { mode: new SearchMode(this.base), update: true };
-        }
-
-        return;
     }
 
-    async update(): Promise<UpdateResult | undefined> {
-        const oldRecords = this.base.records;
-        const result = await this.base.update();
-        if (result) {
-            return result;
+    async update(oldRecords: Record[]) {
+        const records = this.liveStore.getRecords();
+        if (!records.length || !oldRecords.length) {
+            this.index = 0;
+            return;
         }
 
         const selectionId = oldRecords[this.index].id;
-        const newSelectionIndex = this.base.records.findIndex(
+        const newSelectionIndex = records.findIndex(
             (record) => record.id === selectionId
         );
         if (newSelectionIndex === -1) {
-            this.index = Math.max(
-                Math.min(this.index, this.base.records.length - 1),
-                0
-            );
+            this.index = Math.max(Math.min(this.index, records.length - 1), 0);
         } else {
             this.index = newSelectionIndex;
         }

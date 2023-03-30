@@ -1,29 +1,21 @@
-import BaseMode from './base.js';
-import Mode, { Key, KeypressResult, UpdateResult } from './mode.js';
+import LiveStore from '../live-store.js';
+import Mode, { KeypressResult } from './mode.js';
 
 class RescheduleMode implements Mode {
-    base: BaseMode;
+    liveStore: LiveStore;
     dateText: string;
 
-    constructor(base: BaseMode) {
-        this.base = base;
+    constructor(liveStore: LiveStore) {
+        this.liveStore = liveStore;
         this.dateText = '';
     }
 
-    async keypress(
-        data: string,
-        key: Key
-    ): Promise<KeypressResult | undefined> {
-        const result = await this.base.keypress(data, key);
-        if (result) {
-            return result;
-        }
-
+    async keypress(): Promise<KeypressResult | undefined> {
         return;
     }
 
-    async update(): Promise<UpdateResult | undefined> {
-        return await this.base.update();
+    async update() {
+        await this.liveStore.update();
     }
 }
 

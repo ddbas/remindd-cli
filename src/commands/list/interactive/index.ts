@@ -1,20 +1,22 @@
 import { stdin, stdout } from 'node:process';
 import * as readline from 'node:readline';
 
-import Mode, { BaseMode, NormalMode } from './modes/index.js';
+import LiveStore, { BaseLiveStore } from './live-store.js';
+import Mode, { NormalMode } from './modes/index.js';
 import Renderer from './renderer.js';
 import store, { Record } from '../../../store/index.js';
 
 const SYNC_INTERVAL = 5000;
 
 class InteractiveList {
+    liveStore: LiveStore;
     mode: Mode;
     onExit: () => void;
     renderer: Renderer;
 
     constructor(records: Record[], onExit: () => void) {
-        const base = new BaseMode(records);
-        this.mode = new NormalMode(base);
+        this.liveStore = new BaseLiveStore(records);
+        this.mode = new NormalMode(this.liveStore);
         this.renderer = new Renderer();
         this.onExit = onExit;
 
@@ -49,13 +51,17 @@ class InteractiveList {
         if (update || newMode) {
             this.update();
         }
+
+        if (key.meta && key.name === 'escape') {
+            this.mode = new NormalMode(this.liveStore);
+            this.update();
+        }
     }
 
     async update() {
-        const mode = await this.mode.update();
-        if (mode) {
-            this.mode = mode;
-        }
+        const oldRecords = this.mode.liveStore.getRecords();
+        await this.mode.liveStore.update();
+        await this.mode.update(oldRecords);
 
         this.renderer.clear();
         this.renderer.render(this.mode);

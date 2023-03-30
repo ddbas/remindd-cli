@@ -1,44 +1,39 @@
-import BaseMode from './base.js';
-import Mode, { Key, KeypressResult, UpdateResult } from './mode.js';
+import LiveStore from '../live-store.js';
+import Mode, { Key, KeypressResult } from './mode.js';
 import SearchMode from './search.js';
 import SelectionMode from './selection.js';
 
 class NormalMode implements Mode {
-    base: BaseMode;
+    liveStore: LiveStore;
 
-    constructor(base: BaseMode) {
-        this.base = base;
+    constructor(liveStore: LiveStore) {
+        this.liveStore = liveStore;
     }
 
     async keypress(
         data: string,
         key: Key
     ): Promise<KeypressResult | undefined> {
-        const result = await this.base.keypress(data, key);
-        if (result) {
-            return result;
-        }
-
         if (key.ctrl || key.meta || key.shift) {
             return;
         }
 
-        if (key.name === 'up' || key.name === 'down') {
-            if (!this.base.records) {
-                return;
-            }
-
-            return { mode: new SelectionMode(this.base), update: true };
-        }
-
         if (data === '/') {
-            return { mode: new SearchMode(this.base), update: true };
+            return { mode: new SearchMode(), update: true };
+        }
+
+        const records = this.liveStore.getRecords();
+        if (!records.length) {
+            return;
+        }
+
+        if (key.name === 'up' || key.name === 'down') {
+            return { mode: new SelectionMode(this.liveStore), update: true };
         }
     }
 
-    async update(): Promise<UpdateResult | undefined> {
-        return await this.base.update();
-    }
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    async update() {}
 }
 
 export default NormalMode;

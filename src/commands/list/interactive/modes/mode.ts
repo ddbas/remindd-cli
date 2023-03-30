@@ -1,4 +1,5 @@
-import BaseMode from './base';
+import LiveStore from '../live-store.js';
+import { Record } from '../../../../store/index.js';
 
 type Key = {
     name: string;
@@ -12,14 +13,12 @@ type KeypressResult = {
     update: boolean;
 };
 
-type UpdateResult = Mode;
-
 interface Mode {
-    base: BaseMode;
+    liveStore: LiveStore;
     keypress: (data: string, key: Key) => Promise<KeypressResult | undefined>;
-    update: () => Promise<UpdateResult | undefined>;
+    update: (oldRecords: Record[]) => Promise<void>;
 }
 
-export { Key, KeypressResult, UpdateResult };
+export { Key, KeypressResult };
 
 export default Mode;

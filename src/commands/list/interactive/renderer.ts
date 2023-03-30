@@ -28,7 +28,7 @@ class Renderer {
         const rows = [];
 
         if (mode instanceof SearchMode) {
-            const searchPromptRow = `Search: ${mode.query}`;
+            const searchPromptRow = `Search: ${mode.getQuery()}`;
             rows.push(searchPromptRow);
         } else {
             const emptyRow = '';
@@ -51,7 +51,7 @@ class Renderer {
     }
 
     private getRecordRows(mode: Mode): string[] {
-        return mode.base.records.map((record, index) => {
+        return mode.liveStore.getRecords().map((record, index) => {
             const recordText = this.formatRecord(record);
             let row = recordText;
 
@@ -78,7 +78,7 @@ class Renderer {
     }
 
     private getSearchResultRows(searchMode: SearchMode): string[] {
-        return (searchMode.results || []).map((result) => {
+        return (searchMode.getResults() || []).map((result) => {
             const { item: record } = result;
 
             let row;
