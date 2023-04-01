@@ -2,6 +2,7 @@ import LiveStore from '../live-store.js';
 import Mode, { Key, KeypressResult } from './mode.js';
 import SearchMode from './search.js';
 import store, { Record } from '../../../../store/index.js';
+import RescheduleMode from './reschedule.js';
 
 class SelectionMode implements Mode {
     liveStore: LiveStore;
@@ -54,9 +55,14 @@ class SelectionMode implements Mode {
 
             return { update: true };
         }
+
+        if (key.name === 'r') {
+            const record = records[this.index];
+            return { mode: new RescheduleMode(record) };
+        }
     }
 
-    async update(oldRecords: Record[]) {
+    async update(oldRecords: Record[]): Promise<Mode | undefined> {
         const records = this.liveStore.getRecords();
         if (!records.length || !oldRecords.length) {
             this.index = 0;

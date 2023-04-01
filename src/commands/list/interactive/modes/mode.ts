@@ -10,13 +10,13 @@ type Key = {
 
 type KeypressResult = {
     mode?: Mode;
-    update: boolean;
+    update?: boolean;
 };
 
 interface Mode {
     liveStore: LiveStore;
-    keypress: (data: string, key: Key) => Promise<KeypressResult | undefined>;
-    update: (oldRecords: Record[]) => Promise<void>;
+    keypress(data: string, key: Key): Promise<KeypressResult | undefined>;
+    update(oldRecords: Record[]): void;
 }
 
 export { Key, KeypressResult };

@@ -1,22 +1,18 @@
 import { stdin, stdout } from 'node:process';
 import * as readline from 'node:readline';
 
-import LiveStore, { BaseLiveStore } from './live-store.js';
 import Mode, { NormalMode } from './modes/index.js';
 import Renderer from './renderer.js';
-import store, { Record } from '../../../store/index.js';
 
 const SYNC_INTERVAL = 5000;
 
 class InteractiveList {
-    liveStore: LiveStore;
     mode: Mode;
     onExit: () => void;
     renderer: Renderer;
 
-    constructor(records: Record[], onExit: () => void) {
-        this.liveStore = new BaseLiveStore(records);
-        this.mode = new NormalMode(this.liveStore);
+    constructor(onExit: () => void) {
+        this.mode = new NormalMode();
         this.renderer = new Renderer();
         this.onExit = onExit;
 
@@ -53,7 +49,7 @@ class InteractiveList {
         }
 
         if (key.meta && key.name === 'escape') {
-            this.mode = new NormalMode(this.liveStore);
+            this.mode = new NormalMode();
             this.update();
         }
     }
@@ -61,7 +57,7 @@ class InteractiveList {
     async update() {
         const oldRecords = this.mode.liveStore.getRecords();
         await this.mode.liveStore.update();
-        await this.mode.update(oldRecords);
+        this.mode.update(oldRecords);
 
         this.renderer.clear();
         this.renderer.render(this.mode);
@@ -82,8 +78,7 @@ const interactive = async () => {
         process.exit();
     };
 
-    const records = await store.getIncomplete();
-    const interactiveList = new InteractiveList(records, restore);
+    const interactiveList = new InteractiveList(restore);
 
     stdout.write('\x1B[?25l'); // Hide cursor
     interactiveList.update();

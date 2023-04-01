@@ -8,8 +8,8 @@ interface LiveStore {
 class BaseLiveStore implements LiveStore {
     private records: Record[];
 
-    constructor(records: Record[]) {
-        this.records = records;
+    constructor() {
+        this.records = [];
     }
 
     getRecords(): Record[] {

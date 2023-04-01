@@ -1,4 +1,4 @@
-import LiveStore from '../live-store.js';
+import LiveStore, { BaseLiveStore } from '../live-store.js';
 import Mode, { Key, KeypressResult } from './mode.js';
 import SearchMode from './search.js';
 import SelectionMode from './selection.js';
@@ -6,8 +6,12 @@ import SelectionMode from './selection.js';
 class NormalMode implements Mode {
     liveStore: LiveStore;
 
-    constructor(liveStore: LiveStore) {
-        this.liveStore = liveStore;
+    constructor(liveStore?: LiveStore) {
+        if (liveStore) {
+            this.liveStore = liveStore;
+        } else {
+            this.liveStore = new BaseLiveStore();
+        }
     }
 
     async keypress(
