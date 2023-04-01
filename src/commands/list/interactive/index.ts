@@ -38,13 +38,13 @@ class InteractiveList {
             return;
         }
 
-        const { mode: newMode, update = false } =
-            (await this.mode.keypress(data, key)) || {};
-        if (newMode) {
-            this.mode = newMode;
-        }
+        const update = await this.mode.keypress(data, key);
+        if (update) {
+            if (typeof update !== 'boolean') {
+                const newMode = update;
+                this.mode = newMode;
+            }
 
-        if (update || newMode) {
             this.update();
         }
 

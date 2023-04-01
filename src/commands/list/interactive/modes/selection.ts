@@ -1,5 +1,5 @@
 import LiveStore from '../live-store.js';
-import Mode, { Key, KeypressResult } from './mode.js';
+import Mode, { Key, Update } from './mode.js';
 import SearchMode from './search.js';
 import store, { Record } from '../../../../store/index.js';
 import RescheduleMode from './reschedule.js';
@@ -13,39 +13,35 @@ class SelectionMode implements Mode {
         this.index = 0;
     }
 
-    async keypress(
-        data: string,
-        key: Key
-    ): Promise<KeypressResult | undefined> {
+    async keypress(data: string, key: Key): Promise<Update> {
         if (key.ctrl || key.meta || key.shift) {
-            return;
+            return false;
         }
 
         if (data === '/') {
-            return { mode: new SearchMode(), update: true };
+            return new SearchMode();
         }
 
         const records = this.liveStore.getRecords();
         if (!records.length) {
-            return;
+            return false;
         }
 
         if (key.name === 'up') {
             this.index = Math.max(this.index - 1, 0);
-            return { update: true };
+            return true;
         }
 
         if (key.name === 'down') {
             this.index = Math.min(this.index + 1, records.length - 1);
-            return { update: true };
+            return true;
         }
 
         if (key.name === 'c') {
             const record = records[this.index];
             await store.complete(record);
             this.index = Math.max(Math.min(this.index, records.length - 2), 0);
-
-            return { update: true };
+            return true;
         }
 
         if (key.name === 'd' || key.name === 'backspace') {
@@ -53,13 +49,15 @@ class SelectionMode implements Mode {
             await store.remove(record);
             this.index = Math.max(Math.min(this.index, records.length - 2), 0);
 
-            return { update: true };
+            return true;
         }
 
         if (key.name === 'r') {
             const record = records[this.index];
-            return { mode: new RescheduleMode(record) };
+            return new RescheduleMode(record);
         }
+
+        return false;
     }
 
     async update(oldRecords: Record[]): Promise<Mode | undefined> {

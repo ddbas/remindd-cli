@@ -8,17 +8,14 @@ type Key = {
     shift: boolean;
 };
 
-type KeypressResult = {
-    mode?: Mode;
-    update?: boolean;
-};
+type Update = Mode | boolean;
 
 interface Mode {
     liveStore: LiveStore;
-    keypress(data: string, key: Key): Promise<KeypressResult | undefined>;
+    keypress(data: string, key: Key): Promise<Update>;
     update(oldRecords: Record[]): void;
 }
 
-export { Key, KeypressResult };
+export { Key, Update };
 
 export default Mode;

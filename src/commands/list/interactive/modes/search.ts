@@ -1,6 +1,6 @@
 import { getRecordFormatter } from '../../../../format.js';
 import LiveStore from '../live-store.js';
-import Mode, { Key, KeypressResult } from './mode.js';
+import Mode, { Key, Update } from './mode.js';
 import makeSearcher, { SearchResult } from '../../../../search.js';
 import store, { Record } from '../../../../store/index.js';
 import SelectionMode from './selection.js';
@@ -12,23 +12,20 @@ class SearchMode implements Mode {
         this.liveStore = new FilteredLiveStore();
     }
 
-    async keypress(
-        data: string,
-        key: Key
-    ): Promise<KeypressResult | undefined> {
+    async keypress(data: string, key: Key): Promise<Update> {
         const liveStore = this.liveStore as FilteredLiveStore;
         if (key.name === 'backspace') {
             liveStore.query = liveStore.query.slice(0, -1);
-            return { update: true };
+            return true;
         }
 
         if (key.name === 'return' || key.name === 'enter') {
-            return { mode: new SelectionMode(this.liveStore), update: true };
+            return new SelectionMode(this.liveStore);
         }
 
         liveStore.query += data;
 
-        return { update: true };
+        return true;
     }
 
     getQuery(): string {

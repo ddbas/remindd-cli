@@ -1,7 +1,7 @@
 import remind from '@remindd/core';
 
 import LiveStore from '../live-store.js';
-import Mode, { Key, KeypressResult } from './mode.js';
+import Mode, { Key, Update } from './mode.js';
 import NormalMode from './normal.js';
 import store, { Record } from '../../../../store/index.js';
 
@@ -14,18 +14,15 @@ class RescheduleMode implements Mode {
         this.dateText = '';
     }
 
-    async keypress(
-        data: string,
-        key: Key
-    ): Promise<KeypressResult | undefined> {
+    async keypress(data: string, key: Key): Promise<Update> {
         const records = this.liveStore.getRecords();
         if (!records.length) {
-            return;
+            return false;
         }
 
         if (key.name === 'backspace') {
             this.dateText = this.dateText.slice(0, -1);
-            return { update: true };
+            return true;
         }
 
         if (key.name === 'return' || key.name === 'enter') {
@@ -33,12 +30,12 @@ class RescheduleMode implements Mode {
             const [record] = records;
             record.reminder.date = date;
             await store.update(record);
-            return { mode: new NormalMode() };
+            return new NormalMode();
         }
 
         this.dateText += data;
 
-        return { update: true };
+        return true;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function

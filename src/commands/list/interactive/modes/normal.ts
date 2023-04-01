@@ -1,5 +1,5 @@
 import LiveStore, { BaseLiveStore } from '../live-store.js';
-import Mode, { Key, KeypressResult } from './mode.js';
+import Mode, { Key, Update } from './mode.js';
 import SearchMode from './search.js';
 import SelectionMode from './selection.js';
 
@@ -14,26 +14,25 @@ class NormalMode implements Mode {
         }
     }
 
-    async keypress(
-        data: string,
-        key: Key
-    ): Promise<KeypressResult | undefined> {
+    async keypress(data: string, key: Key): Promise<Update> {
         if (key.ctrl || key.meta || key.shift) {
-            return;
+            return false;
         }
 
         if (data === '/') {
-            return { mode: new SearchMode(), update: true };
+            return new SearchMode();
         }
 
         const records = this.liveStore.getRecords();
         if (!records.length) {
-            return;
+            return false;
         }
 
         if (key.name === 'up' || key.name === 'down') {
-            return { mode: new SelectionMode(this.liveStore), update: true };
+            return new SelectionMode(this.liveStore);
         }
+
+        return false;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
