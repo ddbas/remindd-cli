@@ -1,18 +1,19 @@
 import { stdin, stdout } from 'node:process';
 import * as readline from 'node:readline';
 
+import { NonEmptyStack } from '../../../data-structures.js';
 import Mode, { NormalMode } from './modes/index.js';
 import Renderer from './renderer.js';
 
 const SYNC_INTERVAL = 5000;
 
 class InteractiveList {
-    mode: Mode;
+    modes: NonEmptyStack<Mode>;
     onExit: () => void;
     renderer: Renderer;
 
     constructor(onExit: () => void) {
-        this.mode = new NormalMode();
+        this.modes = new NonEmptyStack(new NormalMode());
         this.renderer = new Renderer();
         this.onExit = onExit;
 
@@ -38,29 +39,40 @@ class InteractiveList {
             return;
         }
 
-        const update = await this.mode.keypress(data, key);
-        if (update) {
-            if (typeof update !== 'boolean') {
-                const newMode = update;
-                this.mode = newMode;
+        const keypressResult = await this.modes.peek().keypress(data, key);
+        if (keypressResult) {
+            if (typeof keypressResult !== 'boolean') {
+                switch (keypressResult.kind) {
+                    case 'POP':
+                        this.modes.pop();
+                        break;
+                    case 'PUSH':
+                        this.modes.push(keypressResult.mode);
+                        break;
+                    case 'REPLACE':
+                        this.modes.pop();
+                        this.modes.push(keypressResult.mode);
+                        break;
+                }
             }
 
             this.update();
         }
 
         if (key.meta && key.name === 'escape') {
-            this.mode = new NormalMode();
+            this.modes.pop();
             this.update();
         }
     }
 
     async update() {
-        const oldRecords = this.mode.liveStore.getRecords();
-        await this.mode.liveStore.update();
-        this.mode.update(oldRecords);
+        const mode = this.modes.peek();
+        const oldRecords = mode.liveStore.getRecords();
+        await mode.liveStore.update();
+        mode.update(oldRecords);
 
         this.renderer.clear();
-        this.renderer.render(this.mode);
+        this.renderer.render(mode);
     }
 }
 

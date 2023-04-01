@@ -1,8 +1,7 @@
 import remind from '@remindd/core';
 
 import LiveStore from '../live-store.js';
-import Mode, { Key, Update } from './mode.js';
-import NormalMode from './normal.js';
+import Mode, { Key, KeypressResult, POP } from './mode.js';
 import store, { Record } from '../../../../store/index.js';
 
 class RescheduleMode implements Mode {
@@ -14,7 +13,7 @@ class RescheduleMode implements Mode {
         this.dateText = '';
     }
 
-    async keypress(data: string, key: Key): Promise<Update> {
+    async keypress(data: string, key: Key): Promise<KeypressResult> {
         const records = this.liveStore.getRecords();
         if (!records.length) {
             return false;
@@ -30,7 +29,7 @@ class RescheduleMode implements Mode {
             const [record] = records;
             record.reminder.date = date;
             await store.update(record);
-            return new NormalMode();
+            return POP();
         }
 
         this.dateText += data;

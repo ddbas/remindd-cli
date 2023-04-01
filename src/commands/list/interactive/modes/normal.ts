@@ -1,26 +1,22 @@
 import LiveStore, { BaseLiveStore } from '../live-store.js';
-import Mode, { Key, Update } from './mode.js';
+import Mode, { Key, KeypressResult, PUSH } from './mode.js';
 import SearchMode from './search.js';
 import SelectionMode from './selection.js';
 
 class NormalMode implements Mode {
     liveStore: LiveStore;
 
-    constructor(liveStore?: LiveStore) {
-        if (liveStore) {
-            this.liveStore = liveStore;
-        } else {
-            this.liveStore = new BaseLiveStore();
-        }
+    constructor() {
+        this.liveStore = new BaseLiveStore();
     }
 
-    async keypress(data: string, key: Key): Promise<Update> {
+    async keypress(data: string, key: Key): Promise<KeypressResult> {
         if (key.ctrl || key.meta || key.shift) {
             return false;
         }
 
         if (data === '/') {
-            return new SearchMode();
+            return PUSH(new SearchMode());
         }
 
         const records = this.liveStore.getRecords();
@@ -29,7 +25,7 @@ class NormalMode implements Mode {
         }
 
         if (key.name === 'up' || key.name === 'down') {
-            return new SelectionMode(this.liveStore);
+            return PUSH(new SelectionMode(this.liveStore));
         }
 
         return false;

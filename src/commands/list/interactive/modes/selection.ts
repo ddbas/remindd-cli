@@ -1,5 +1,5 @@
 import LiveStore from '../live-store.js';
-import Mode, { Key, Update } from './mode.js';
+import Mode, { Key, KeypressResult, PUSH, REPLACE } from './mode.js';
 import SearchMode from './search.js';
 import store, { Record } from '../../../../store/index.js';
 import RescheduleMode from './reschedule.js';
@@ -13,13 +13,13 @@ class SelectionMode implements Mode {
         this.index = 0;
     }
 
-    async keypress(data: string, key: Key): Promise<Update> {
+    async keypress(data: string, key: Key): Promise<KeypressResult> {
         if (key.ctrl || key.meta || key.shift) {
             return false;
         }
 
         if (data === '/') {
-            return new SearchMode();
+            return REPLACE(new SearchMode());
         }
 
         const records = this.liveStore.getRecords();
@@ -54,7 +54,7 @@ class SelectionMode implements Mode {
 
         if (key.name === 'r') {
             const record = records[this.index];
-            return new RescheduleMode(record);
+            return PUSH(new RescheduleMode(record));
         }
 
         return false;
