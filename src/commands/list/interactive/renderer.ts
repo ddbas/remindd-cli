@@ -4,6 +4,7 @@ import getFormatter, {
 } from '../../../format.js';
 import { stdout } from 'node:process';
 import Mode, {
+    AddMode,
     NormalMode,
     RescheduleMode,
     SearchMode,
@@ -37,7 +38,9 @@ class Renderer {
 
     render(mode: Mode) {
         let rows: Rows = { content: [] };
-        if (mode instanceof NormalMode) {
+        if (mode instanceof AddMode) {
+            rows = this.getAddModeRows(mode);
+        } else if (mode instanceof NormalMode) {
             rows = this.getNormalModeRows(mode);
         } else if (mode instanceof RescheduleMode) {
             rows = this.getRescheduleModeRows(mode);
@@ -49,6 +52,12 @@ class Renderer {
 
         const { header = '', content } = rows;
         stdout.write([header, ...content].join('\n'));
+    }
+
+    private getAddModeRows(mode: AddMode): Rows {
+        const content = [`Remind me: ${mode.reminderText}`];
+
+        return { content };
     }
 
     private getNormalModeRows(mode: NormalMode): Rows {

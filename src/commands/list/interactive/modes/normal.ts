@@ -1,4 +1,5 @@
 import LiveStore, { BaseLiveStore } from '../live-store.js';
+import AddMode from './add.js';
 import Mode, { Key, KeypressResult, PUSH } from './mode.js';
 import SearchMode from './search.js';
 import SelectionMode from './selection.js';
@@ -13,6 +14,10 @@ class NormalMode implements Mode {
     async keypress(data: string, key: Key): Promise<KeypressResult> {
         if (key.ctrl || key.meta || key.shift) {
             return false;
+        }
+
+        if (data === 'a') {
+            return PUSH(new AddMode());
         }
 
         if (data === '/') {

@@ -1,8 +1,9 @@
+import AddMode from './add.js';
 import LiveStore from '../live-store.js';
 import Mode, { Key, KeypressResult, PUSH, REPLACE } from './mode.js';
+import RescheduleMode from './reschedule.js';
 import SearchMode from './search.js';
 import store, { Record } from '../../../../store/index.js';
-import RescheduleMode from './reschedule.js';
 
 class SelectionMode implements Mode {
     liveStore: LiveStore;
@@ -20,6 +21,10 @@ class SelectionMode implements Mode {
 
         if (data === '/') {
             return REPLACE(new SearchMode());
+        }
+
+        if (data === 'a') {
+            return PUSH(new AddMode());
         }
 
         const records = this.liveStore.getRecords();

@@ -1,8 +1,8 @@
 import store, { Record } from '../../../store/index.js';
 
 interface LiveStore {
-    getRecords: () => Record[];
-    update: () => Promise<void>;
+    getRecords(): Record[];
+    update(): Promise<void>;
 }
 
 class BaseLiveStore implements LiveStore {
