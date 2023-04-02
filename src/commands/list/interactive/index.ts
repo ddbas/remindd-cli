@@ -2,21 +2,24 @@ import { stdin, stdout } from 'node:process';
 import * as readline from 'node:readline';
 
 import { NonEmptyStack } from '../../../data-structures.js';
+import LiveStore, { DefaultLiveStoreView } from './live-store/index.js';
 import Mode, { NormalMode } from './modes/index.js';
 import Renderer from './renderer.js';
 
-const SYNC_INTERVAL = 5000;
+const RENDER_INTERVAL = 1000;
 
 class InteractiveList {
-    modes: NonEmptyStack<Mode>;
-    onExit: () => void;
-    renderer: Renderer;
+    private modes: NonEmptyStack<Mode>;
+    private onExit: () => void;
+    private renderer: Renderer;
 
-    constructor(onExit: () => void) {
-        this.modes = new NonEmptyStack(new NormalMode());
+    constructor(liveStore: LiveStore, onExit: () => void) {
+        const liveStoreView = new DefaultLiveStoreView(liveStore);
+        this.modes = new NonEmptyStack(new NormalMode(liveStoreView));
         this.renderer = new Renderer();
         this.onExit = onExit;
 
+        setInterval(this.render.bind(this), RENDER_INTERVAL);
         stdin.on('keypress', this.keypress.bind(this));
     }
 
@@ -56,21 +59,18 @@ class InteractiveList {
                 }
             }
 
-            this.update();
+            this.render();
+            return;
         }
 
-        if (key.meta && key.name === 'escape') {
-            this.modes.pop();
-            this.update();
+        if (key.meta && key.name === 'escape' && this.modes.pop()) {
+            this.render();
+            return;
         }
     }
 
-    async update() {
+    render() {
         const mode = this.modes.peek();
-        const oldRecords = mode.liveStore.getRecords();
-        await mode.liveStore.update();
-        mode.update(oldRecords);
-
         this.renderer.clear();
         this.renderer.render(mode);
     }
@@ -90,11 +90,12 @@ const interactive = async () => {
         process.exit();
     };
 
-    const interactiveList = new InteractiveList(restore);
+    const liveStore = new LiveStore();
+    await liveStore.update();
+    const interactiveList = new InteractiveList(liveStore, restore);
 
     stdout.write('\x1B[?25l'); // Hide cursor
-    interactiveList.update();
-    setInterval(interactiveList.update.bind(interactiveList), SYNC_INTERVAL);
+    interactiveList.render();
 };
 
 export default interactive;

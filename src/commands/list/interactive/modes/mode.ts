@@ -1,5 +1,14 @@
-import LiveStore from '../live-store.js';
-import { Record } from '../../../../store/index.js';
+import { LiveStoreView } from '../live-store/index.js';
+
+enum StatusLevel {
+    INFO,
+    ERROR,
+}
+
+interface Status {
+    level: StatusLevel;
+    text: string;
+}
 
 type Key = {
     name: string;
@@ -8,36 +17,42 @@ type Key = {
     shift: boolean;
 };
 
-interface PopModeChange {
+interface ModePopTransition {
     kind: 'POP';
 }
 
-interface PushModeChange {
+interface ModePushTransition {
     kind: 'PUSH';
     mode: Mode;
 }
 
-interface ReplaceModeChange {
+interface ModeReplaceTransition {
     kind: 'REPLACE';
     mode: Mode;
 }
 
-type ModeChange = PopModeChange | PushModeChange | ReplaceModeChange;
+type ModeTransition =
+    | ModePopTransition
+    | ModePushTransition
+    | ModeReplaceTransition;
 
-const POP = (): PopModeChange => ({ kind: 'POP' });
-const PUSH = (mode: Mode): PushModeChange => ({ kind: 'PUSH', mode });
-const REPLACE = (mode: Mode): ReplaceModeChange => ({ kind: 'REPLACE', mode });
+const POP: ModePopTransition = { kind: 'POP' };
+const PUSH = (mode: Mode): ModePushTransition => ({ kind: 'PUSH', mode });
+const REPLACE = (mode: Mode): ModeReplaceTransition => ({
+    kind: 'REPLACE',
+    mode,
+});
 
-type Update = boolean;
+type Render = boolean;
 
-type KeypressResult = ModeChange | Update;
+type KeypressResult = ModeTransition | Render;
 
 interface Mode {
-    liveStore: LiveStore;
+    liveStoreView: LiveStoreView;
+    getStatus(): Status | undefined;
     keypress(data: string, key: Key): Promise<KeypressResult>;
-    update(oldRecords: Record[]): void;
 }
 
-export { Key, KeypressResult, POP, PUSH, REPLACE };
+export { Key, KeypressResult, POP, PUSH, REPLACE, Status, StatusLevel };
 
 export default Mode;

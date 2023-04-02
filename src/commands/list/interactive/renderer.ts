@@ -1,8 +1,9 @@
+import { stdout } from 'node:process';
+
 import getFormatter, {
     Formattable,
     getRecordFormatter,
 } from '../../../format.js';
-import { stdout } from 'node:process';
 import Mode, {
     AddMode,
     NormalMode,
@@ -13,11 +14,10 @@ import Mode, {
 import { getWrappedResultText } from '../../../search.js';
 import { Record } from '../../../store/index.js';
 import { formattableHeader } from '../utils.js';
+import { StatusLevel } from './modes/mode.js';
+import { UPDATE_INTERVAL } from './live-store/index.js';
 
-interface Rows {
-    header?: string;
-    content: string[];
-}
+type Rows = string[];
 
 const isInPast = (record: Record) =>
     record.reminder.date.getTime() - Date.now() < 0;
@@ -37,7 +37,7 @@ class Renderer {
     }
 
     render(mode: Mode) {
-        let rows: Rows = { content: [] };
+        let rows: Rows = [];
         if (mode instanceof AddMode) {
             rows = this.getAddModeRows(mode);
         } else if (mode instanceof NormalMode) {
@@ -50,18 +50,31 @@ class Renderer {
             rows = this.getSearchModeRows(mode);
         }
 
-        const { header = '', content } = rows;
-        stdout.write([header, ...content].join('\n'));
+        let modeStatus = '';
+        const status = mode.getStatus();
+        if (status) {
+            modeStatus = status.text;
+            if (status.level === StatusLevel.ERROR) {
+                modeStatus = `\x1B[31m${modeStatus}\x1B[0m`;
+            }
+        }
+
+        const elapsed = Date.now() - mode.liveStoreView.getLastUpdate();
+        const nextUpdate = Math.max(
+            Math.ceil((UPDATE_INTERVAL - elapsed) / 1000),
+            0
+        );
+        const statusRow = `(${nextUpdate}) ${modeStatus}`;
+        stdout.write([statusRow, ...rows].join('\n'));
     }
 
     private getAddModeRows(mode: AddMode): Rows {
-        const content = [`Remind me: ${mode.reminderText}`];
-
-        return { content };
+        const promptRow = `Remind me: ${mode.reminderText}`;
+        return [promptRow];
     }
 
     private getNormalModeRows(mode: NormalMode): Rows {
-        const recordRows = mode.liveStore.getRecords().map((record) => {
+        const recordRows = mode.liveStoreView.getRecords().map((record) => {
             const row = this.formatRecord(record);
 
             if (isInPast(record)) {
@@ -71,52 +84,23 @@ class Renderer {
             return row;
         });
 
-        const headerRow = this.format(formattableHeader);
-        return { content: [headerRow, ...recordRows] };
+        const header = this.format(formattableHeader);
+        return [header, ...recordRows];
     }
 
     private getRescheduleModeRows(mode: RescheduleMode): Rows {
-        const records = mode.liveStore.getRecords();
+        const records = mode.liveStoreView.getRecords();
         if (!records.length) {
-            const header = 'No record to reschedule.';
-            return { header, content: [] };
+            return [];
         }
 
-        const format = getRecordFormatter('%t');
-        const [record] = records;
-        const header = `Reschedule '${format(record).trimEnd()}'`;
-        const content = [`When: ${mode.dateText}`];
-
-        return { header, content };
-    }
-
-    private getSelectionModeRows(mode: SelectionMode): Rows {
-        const recordRows = mode.liveStore.getRecords().map((record, index) => {
-            const selected = index === mode.index;
-            const inPast = isInPast(record);
-            let row = this.formatRecord(record);
-            if (selected) {
-                row = `\x1B[7m${row}`;
-            }
-
-            if (inPast) {
-                row = `\x1B[31m${row}`;
-            }
-
-            if (selected || inPast) {
-                row = `${row}\x1B[0m`;
-            }
-
-            return row;
-        });
-
-        const headerRow = this.format(formattableHeader);
-        return { content: [headerRow, ...recordRows] };
+        const promptRow = `When: ${mode.dateText}`;
+        return [promptRow];
     }
 
     private getSearchModeRows(mode: SearchMode): Rows {
         // TODO: Show cursor
-        const header = `Search: ${mode.getQuery()}`;
+        const promptRow = `Search: ${mode.getQuery()}`;
 
         const resultRows = mode.getResults().map((result) => {
             const { item: record } = result;
@@ -128,8 +112,35 @@ class Renderer {
             return getWrappedResultText(result, '\x1b[32m', '\x1b[0m'); // green match
         });
 
-        const headerRow = this.format(formattableHeader);
-        return { header, content: [headerRow, ...resultRows] };
+        const resultsHeaderRow = this.format(formattableHeader);
+        return [promptRow, resultsHeaderRow, ...resultRows];
+    }
+
+    private getSelectionModeRows(mode: SelectionMode): Rows {
+        const selectedIndex = mode.getIndex();
+        const recordRows = mode.liveStoreView
+            .getRecords()
+            .map((record, index) => {
+                const selected = index === selectedIndex;
+                const inPast = isInPast(record);
+                let row = this.formatRecord(record);
+                if (selected) {
+                    row = `\x1B[7m${row}`;
+                }
+
+                if (inPast) {
+                    row = `\x1B[31m${row}`;
+                }
+
+                if (selected || inPast) {
+                    row = `${row}\x1B[0m`;
+                }
+
+                return row;
+            });
+
+        const recordsHeaderRow = this.format(formattableHeader);
+        return [recordsHeaderRow, ...recordRows];
     }
 }
 

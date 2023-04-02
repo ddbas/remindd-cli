@@ -1,20 +1,43 @@
 import remind from '@remindd/core';
 
-import LiveStore from '../live-store.js';
-import Mode, { Key, KeypressResult, POP } from './mode.js';
+import { getRecordFormatter } from '../../../../format.js';
+import { LiveStoreView } from '../live-store/index.js';
+import Mode, { Key, KeypressResult, POP, Status, StatusLevel } from './mode.js';
 import store, { Record } from '../../../../store/index.js';
 
 class RescheduleMode implements Mode {
-    liveStore: LiveStore;
     dateText: string;
+    private format: (r: Record) => string;
+    liveStoreView: LiveStoreView;
+    status?: Status;
 
-    constructor(record: Record) {
-        this.liveStore = new SingleRecordLiveStore(record);
+    constructor(liveStoreView: LiveStoreView, record: Record) {
         this.dateText = '';
+        this.liveStoreView = new SingleRecordLiveStoreView(
+            liveStoreView,
+            record
+        );
+        this.format = getRecordFormatter('%t');
+    }
+
+    getStatus(): Status | undefined {
+        const records = this.liveStoreView.getRecords();
+        if (!records.length) {
+            return {
+                level: StatusLevel.ERROR,
+                text: 'No record to reschedule.',
+            };
+        }
+
+        const [record] = records;
+        return {
+            level: StatusLevel.INFO,
+            text: `Reschedule '${this.format(record).trimEnd()}'`,
+        };
     }
 
     async keypress(data: string, key: Key): Promise<KeypressResult> {
-        const records = this.liveStore.getRecords();
+        const records = this.liveStoreView.getRecords();
         if (!records.length) {
             return false;
         }
@@ -29,45 +52,36 @@ class RescheduleMode implements Mode {
             const [record] = records;
             record.reminder.date = date;
             await store.update(record);
-            return POP();
+            return POP;
         }
 
         this.dateText += data;
 
         return true;
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    async update() {}
 }
 
-class SingleRecordLiveStore implements LiveStore {
-    private id: string;
-    private records: Record[];
+class SingleRecordLiveStoreView implements LiveStoreView {
+    private recordId: string;
+    private liveStoreView: LiveStoreView;
 
-    constructor(record: Record) {
-        this.id = record.id;
-        this.records = [record];
+    constructor(liveStoreView: LiveStoreView, record: Record) {
+        this.liveStoreView = liveStoreView;
+        this.recordId = record.id;
+    }
+
+    getLastUpdate(): number {
+        return this.liveStoreView.getLastUpdate();
     }
 
     getRecords(): Record[] {
-        return this.records;
-    }
-
-    async update() {
-        const records = await store.getIncomplete();
-        if (!records.length) {
-            this.records = [];
-            return;
-        }
-
-        const record = records.find((record) => record.id === this.id);
+        const records = this.liveStoreView.getRecords() || [];
+        const record = records.find((record) => record.id === this.recordId);
         if (!record) {
-            this.records = [];
-            return;
+            return [];
         }
 
-        this.records = [record];
+        return [record];
     }
 }
 export default RescheduleMode;

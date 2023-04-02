@@ -1,17 +1,20 @@
 import remind from '@remindd/core';
 
-import Record from 'store/record.js';
-import LiveStore from '../live-store.js';
-import Mode, { Key, KeypressResult, POP } from './mode.js';
+import { LiveStoreView } from '../live-store/index.js';
+import Mode, { Key, KeypressResult, POP, Status } from './mode.js';
 import store from '../../../../store/index.js';
 
 class AddMode implements Mode {
-    liveStore: EmptyLiveStore;
+    liveStoreView: LiveStoreView;
     reminderText: string;
 
-    constructor() {
-        this.liveStore = new EmptyLiveStore();
+    constructor(liveStoreView: LiveStoreView) {
+        this.liveStoreView = liveStoreView;
         this.reminderText = '';
+    }
+
+    getStatus(): Status | undefined {
+        return;
     }
 
     async keypress(data: string, key: Key): Promise<KeypressResult> {
@@ -30,25 +33,13 @@ class AddMode implements Mode {
             }
 
             await store.create(reminder);
-            return POP();
+            return POP;
         }
 
         this.reminderText += data;
 
         return true;
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    update(): void {}
-}
-
-class EmptyLiveStore implements LiveStore {
-    getRecords(): Record[] {
-        return [];
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    async update() {}
 }
 
 export default AddMode;

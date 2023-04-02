@@ -1,66 +1,73 @@
 import { getRecordFormatter } from '../../../../format.js';
-import LiveStore from '../live-store.js';
-import Mode, { Key, KeypressResult, REPLACE } from './mode.js';
+import { LiveStoreView } from '../live-store/index.js';
+import Mode, { Key, KeypressResult, REPLACE, Status } from './mode.js';
 import makeSearcher, { SearchResult } from '../../../../search.js';
-import store, { Record } from '../../../../store/index.js';
+import { Record } from '../../../../store/index.js';
 import SelectionMode from './selection.js';
 
 class SearchMode implements Mode {
-    liveStore: LiveStore;
+    liveStoreView: LiveStoreView;
 
-    constructor() {
-        this.liveStore = new FilteredLiveStore();
+    constructor(liveStoreView: LiveStoreView) {
+        this.liveStoreView = new FilteredLiveStoreView(liveStoreView);
+    }
+
+    getStatus(): Status | undefined {
+        return;
     }
 
     async keypress(data: string, key: Key): Promise<KeypressResult> {
-        const liveStore = this.liveStore as FilteredLiveStore;
+        const liveStoreView = this.liveStoreView as FilteredLiveStoreView;
         if (key.name === 'backspace') {
-            liveStore.query = liveStore.query.slice(0, -1);
+            liveStoreView.query = liveStoreView.query.slice(0, -1);
             return true;
         }
 
         if (key.name === 'return' || key.name === 'enter') {
-            return REPLACE(new SelectionMode(this.liveStore));
+            return REPLACE(new SelectionMode(this.liveStoreView));
         }
 
-        liveStore.query += data;
+        liveStoreView.query += data;
 
         return true;
     }
 
     getQuery(): string {
-        const liveStore = this.liveStore as FilteredLiveStore;
-        return liveStore.query;
+        const liveStoreView = this.liveStoreView as FilteredLiveStoreView;
+        return liveStoreView.query;
     }
 
     getResults(): SearchResult<Record>[] {
-        const liveStore = this.liveStore as FilteredLiveStore;
-        return liveStore.results;
+        const liveStoreView = this.liveStoreView as FilteredLiveStoreView;
+        return liveStoreView.getResults();
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    async update() {}
 }
 
-class FilteredLiveStore implements LiveStore {
+class FilteredLiveStoreView implements LiveStoreView {
+    private liveStoreView: LiveStoreView;
     private format: (record: Record) => string;
     query: string;
-    results: SearchResult<Record>[];
 
-    constructor() {
+    constructor(liveStoreView: LiveStoreView) {
         this.format = getRecordFormatter();
+        this.liveStoreView = liveStoreView;
         this.query = '';
-        this.results = [];
+    }
+
+    getLastUpdate(): number {
+        return this.liveStoreView.getLastUpdate();
     }
 
     getRecords(): Record[] {
-        return this.results.map((result) => result.item);
+        const results = this.getResults();
+        return results.map((result) => result.item);
     }
 
-    async update() {
-        const records = await store.getIncomplete();
+    getResults(): SearchResult<Record>[] {
+        const records = this.liveStoreView.getRecords();
         const search = makeSearcher(records, this.format);
-        this.results = search(this.query);
+        const results = search(this.query);
+        return results;
     }
 }
 

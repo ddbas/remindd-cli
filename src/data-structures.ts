@@ -22,7 +22,7 @@ export class Stack<Item> {
     }
 }
 
-export class NonEmptyStack<Item> implements NonEmptyStack<Item> {
+export class NonEmptyStack<Item> {
     private stack: Stack<Item>;
 
     constructor(item: Item) {
