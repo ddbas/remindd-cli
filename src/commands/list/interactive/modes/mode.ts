@@ -17,42 +17,23 @@ type Key = {
     shift: boolean;
 };
 
-interface ModePopTransition {
-    kind: 'POP';
+enum KeypressResult {
+    ADD,
+    RESCHEDULE,
+    SEARCH,
+    SELECTION,
+
+    CANCEL,
+    SUBMIT,
+    UPDATE,
 }
-
-interface ModePushTransition {
-    kind: 'PUSH';
-    mode: Mode;
-}
-
-interface ModeReplaceTransition {
-    kind: 'REPLACE';
-    mode: Mode;
-}
-
-type ModeTransition =
-    | ModePopTransition
-    | ModePushTransition
-    | ModeReplaceTransition;
-
-const POP: ModePopTransition = { kind: 'POP' };
-const PUSH = (mode: Mode): ModePushTransition => ({ kind: 'PUSH', mode });
-const REPLACE = (mode: Mode): ModeReplaceTransition => ({
-    kind: 'REPLACE',
-    mode,
-});
-
-type Render = boolean;
-
-type KeypressResult = ModeTransition | Render;
 
 interface Mode {
     liveStoreView: LiveStoreView;
     getStatus(): Status | undefined;
-    keypress(data: string, key: Key): Promise<KeypressResult>;
+    keypress(data: string, key: Key): Promise<KeypressResult | undefined>;
 }
 
-export { Key, KeypressResult, POP, PUSH, REPLACE, Status, StatusLevel };
+export { Key, KeypressResult, Status, StatusLevel };
 
 export default Mode;

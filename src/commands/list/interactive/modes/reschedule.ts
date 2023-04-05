@@ -2,7 +2,7 @@ import remind from '@remindd/core';
 
 import { getRecordFormatter } from '../../../../format.js';
 import { LiveStoreView } from '../live-store/index.js';
-import Mode, { Key, KeypressResult, POP, Status, StatusLevel } from './mode.js';
+import Mode, { Key, KeypressResult, Status, StatusLevel } from './mode.js';
 import store, { Record } from '../../../../store/index.js';
 
 class RescheduleMode implements Mode {
@@ -36,15 +36,18 @@ class RescheduleMode implements Mode {
         };
     }
 
-    async keypress(data: string, key: Key): Promise<KeypressResult> {
+    async keypress(
+        data: string,
+        key: Key
+    ): Promise<KeypressResult | undefined> {
         const records = this.liveStoreView.getRecords();
         if (!records.length) {
-            return false;
+            return;
         }
 
         if (key.name === 'backspace') {
             this.dateText = this.dateText.slice(0, -1);
-            return true;
+            return KeypressResult.UPDATE;
         }
 
         if (key.name === 'return' || key.name === 'enter') {
@@ -52,12 +55,12 @@ class RescheduleMode implements Mode {
             const [record] = records;
             record.reminder.date = date;
             await store.update(record);
-            return POP;
+            return KeypressResult.SUBMIT;
         }
 
         this.dateText += data;
 
-        return true;
+        return KeypressResult.UPDATE;
     }
 }
 

@@ -1,7 +1,7 @@
 import remind from '@remindd/core';
 
 import { LiveStoreView } from '../live-store/index.js';
-import Mode, { Key, KeypressResult, POP, Status } from './mode.js';
+import Mode, { Key, KeypressResult, Status } from './mode.js';
 import store from '../../../../store/index.js';
 
 class AddMode implements Mode {
@@ -17,10 +17,13 @@ class AddMode implements Mode {
         return;
     }
 
-    async keypress(data: string, key: Key): Promise<KeypressResult> {
+    async keypress(
+        data: string,
+        key: Key
+    ): Promise<KeypressResult | undefined> {
         if (key.name === 'backspace') {
             this.reminderText = this.reminderText.slice(0, -1);
-            return true;
+            return KeypressResult.UPDATE;
         }
 
         if (key.name === 'return' || key.name === 'enter') {
@@ -29,16 +32,16 @@ class AddMode implements Mode {
                 reminder = remind(this.reminderText);
             } catch {
                 // Invalid reminder
-                return false;
+                return;
             }
 
             await store.create(reminder);
-            return POP;
+            return KeypressResult.SUBMIT;
         }
 
         this.reminderText += data;
 
-        return true;
+        return KeypressResult.UPDATE;
     }
 }
 

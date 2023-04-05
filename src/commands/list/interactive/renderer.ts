@@ -117,27 +117,26 @@ class Renderer {
     }
 
     private getSelectionModeRows(mode: SelectionMode): Rows {
-        const selectedIndex = mode.getIndex();
-        const recordRows = mode.liveStoreView
-            .getRecords()
-            .map((record, index) => {
-                const selected = index === selectedIndex;
-                const inPast = isInPast(record);
-                let row = this.formatRecord(record);
-                if (selected) {
-                    row = `\x1B[7m${row}`;
-                }
+        const selectedRecord = mode.getRecord();
+        const recordRows = mode.liveStoreView.getRecords().map((record) => {
+            const selected =
+                !!selectedRecord && record.id === selectedRecord.id;
+            const inPast = isInPast(record);
+            let row = this.formatRecord(record);
+            if (selected) {
+                row = `\x1B[7m${row}`;
+            }
 
-                if (inPast) {
-                    row = `\x1B[31m${row}`;
-                }
+            if (inPast) {
+                row = `\x1B[31m${row}`;
+            }
 
-                if (selected || inPast) {
-                    row = `${row}\x1B[0m`;
-                }
+            if (selected || inPast) {
+                row = `${row}\x1B[0m`;
+            }
 
-                return row;
-            });
+            return row;
+        });
 
         const recordsHeaderRow = this.format(formattableHeader);
         return [recordsHeaderRow, ...recordRows];

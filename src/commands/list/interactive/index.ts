@@ -3,18 +3,27 @@ import * as readline from 'node:readline';
 
 import { NonEmptyStack } from '../../../data-structures.js';
 import LiveStore, { DefaultLiveStoreView } from './live-store/index.js';
-import Mode, { NormalMode } from './modes/index.js';
+import Mode, {
+    AddMode,
+    KeypressResult,
+    NormalMode,
+    RescheduleMode,
+    SearchMode,
+    SelectionMode,
+} from './modes/index.js';
 import Renderer from './renderer.js';
 
 const RENDER_INTERVAL = 1000;
 
 class InteractiveList {
+    private liveStore: LiveStore;
     private modes: NonEmptyStack<Mode>;
     private onExit: () => void;
     private renderer: Renderer;
 
     constructor(liveStore: LiveStore, onExit: () => void) {
-        const liveStoreView = new DefaultLiveStoreView(liveStore);
+        this.liveStore = liveStore;
+        const liveStoreView = new DefaultLiveStoreView(this.liveStore);
         this.modes = new NonEmptyStack(new NormalMode(liveStoreView));
         this.renderer = new Renderer();
         this.onExit = onExit;
@@ -42,31 +51,89 @@ class InteractiveList {
             return;
         }
 
-        const keypressResult = await this.modes.peek().keypress(data, key);
-        if (keypressResult) {
-            if (typeof keypressResult !== 'boolean') {
-                switch (keypressResult.kind) {
-                    case 'POP':
-                        this.modes.pop();
-                        break;
-                    case 'PUSH':
-                        this.modes.push(keypressResult.mode);
-                        break;
-                    case 'REPLACE':
-                        this.modes.pop();
-                        this.modes.push(keypressResult.mode);
-                        break;
-                }
-            }
-
-            this.render();
-            return;
-        }
-
         if (key.meta && key.name === 'escape' && this.modes.pop()) {
             this.render();
             return;
         }
+
+        const mode = this.modes.peek();
+        const keypressResult = await mode.keypress(data, key);
+        if (keypressResult == undefined) {
+            return;
+        }
+
+        this.handleKeypressResult(mode, keypressResult);
+    }
+
+    private handleKeypressResult(mode: Mode, keypressResult: KeypressResult) {
+        switch (keypressResult) {
+            case KeypressResult.ADD:
+                if (
+                    mode instanceof NormalMode ||
+                    mode instanceof SelectionMode
+                ) {
+                    this.modes.push(new AddMode(mode.liveStoreView));
+                    break;
+                }
+
+                throw new Error('Something went wrong');
+            case KeypressResult.RESCHEDULE:
+                if (mode instanceof SelectionMode) {
+                    const record = mode.getRecord();
+                    if (record) {
+                        this.modes.push(
+                            new RescheduleMode(mode.liveStoreView, record)
+                        );
+                        break;
+                    }
+                }
+
+                throw new Error('Something went wrong');
+            case KeypressResult.SEARCH:
+                if (
+                    mode instanceof NormalMode ||
+                    mode instanceof SelectionMode
+                ) {
+                    this.modes.push(new SearchMode(mode.liveStoreView));
+                    break;
+                }
+
+                throw new Error('Something went wrong');
+            case KeypressResult.SELECTION:
+                if (mode instanceof NormalMode) {
+                    this.modes.push(new SelectionMode(mode.liveStoreView));
+                    break;
+                }
+
+                throw new Error('Something went wrong');
+            case KeypressResult.SUBMIT:
+                if (mode instanceof AddMode || mode instanceof RescheduleMode) {
+                    this.modes.pop();
+                    break;
+                } else if (mode instanceof SearchMode) {
+                    this.modes.pop();
+                    this.modes.push(new SelectionMode(mode.liveStoreView));
+                    break;
+                }
+
+                throw new Error('Something went wrong');
+            case KeypressResult.CANCEL:
+                if (
+                    mode instanceof RescheduleMode ||
+                    mode instanceof SearchMode
+                ) {
+                    this.modes.pop();
+                    break;
+                }
+
+                throw new Error('Something went wrong');
+            case KeypressResult.UPDATE:
+                this.liveStore.update();
+                break;
+        }
+
+        this.render();
+        return;
     }
 
     render() {

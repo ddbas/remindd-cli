@@ -1,8 +1,5 @@
-import AddMode from './add.js';
 import { LiveStoreView } from '../live-store/index.js';
-import Mode, { Key, KeypressResult, PUSH, REPLACE, Status } from './mode.js';
-import RescheduleMode from './reschedule.js';
-import SearchMode from './search.js';
+import Mode, { Key, KeypressResult, Status } from './mode.js';
 import store, { Record } from '../../../../store/index.js';
 
 class SelectionMode implements Mode {
@@ -18,32 +15,35 @@ class SelectionMode implements Mode {
         return;
     }
 
-    async keypress(data: string, key: Key): Promise<KeypressResult> {
+    async keypress(
+        data: string,
+        key: Key
+    ): Promise<KeypressResult | undefined> {
         if (key.ctrl || key.meta || key.shift) {
-            return false;
+            return;
         }
 
         if (data === '/') {
-            return REPLACE(new SearchMode(this.liveStoreView));
+            return KeypressResult.SEARCH;
         }
 
         if (data === 'a') {
-            return PUSH(new AddMode(this.liveStoreView));
+            return KeypressResult.ADD;
         }
 
         const records = this.liveStoreView.getRecords();
         if (!records.length) {
-            return false;
+            return;
         }
 
         if (key.name === 'up') {
             this.selection.decrement(records);
-            return true;
+            return KeypressResult.UPDATE;
         }
 
         if (key.name === 'down') {
             this.selection.increment(records);
-            return true;
+            return KeypressResult.UPDATE;
         }
 
         if (key.name === 'c') {
@@ -52,7 +52,7 @@ class SelectionMode implements Mode {
                 await store.complete(record);
             }
 
-            return true;
+            return KeypressResult.UPDATE;
         }
 
         if (key.name === 'd' || key.name === 'backspace') {
@@ -61,22 +61,22 @@ class SelectionMode implements Mode {
                 await store.remove(record);
             }
 
-            return true;
+            return KeypressResult.UPDATE;
         }
 
         if (key.name === 'r') {
             const record = this.selection.getRecord(records);
             if (record) {
-                return PUSH(new RescheduleMode(this.liveStoreView, record));
+                return KeypressResult.RESCHEDULE;
             }
         }
 
-        return false;
+        return;
     }
 
-    getIndex(): number {
+    getRecord(): Record | undefined {
         const records = this.liveStoreView.getRecords();
-        return this.selection.getIndex(records);
+        return this.selection.getRecord(records);
     }
 }
 
