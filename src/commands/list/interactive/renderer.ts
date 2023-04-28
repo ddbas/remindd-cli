@@ -1,145 +1,159 @@
 import { stdout } from 'node:process';
-
 import getFormatter, {
     Formattable,
     getRecordFormatter,
 } from '../../../format.js';
-import Mode, {
-    AddMode,
-    NormalMode,
-    RescheduleMode,
-    SearchMode,
-    SelectionMode,
-} from './modes/index.js';
-import { getWrappedResultText } from '../../../search.js';
 import { Record } from '../../../store/index.js';
 import { formattableHeader } from '../utils.js';
-import { StatusLevel } from './modes/mode.js';
-import { UPDATE_INTERVAL } from './live-store/index.js';
 
-type Rows = string[];
+interface ListContent {
+    records: Record[];
+    selectedRecord?: Record;
+}
 
-const isInPast = (record: Record) =>
-    record.reminder.date.getTime() - Date.now() < 0;
+interface Prompt {
+    message: string;
+    input: string;
+    // cursor: number; // TODO: cursor position
+}
+
+enum StatusType {
+    INFO,
+    ERROR,
+}
+
+interface Status {
+    message: string;
+    type?: StatusType;
+}
+
+interface Content {
+    lastUpdate: number;
+    status?: Status;
+    prompt?: Prompt;
+    list?: ListContent;
+}
 
 class Renderer {
     private format: (f: Formattable) => string;
     private formatRecord: (record: Record) => string;
+    private currentContent: Content | undefined;
+    private updateInterval: number;
+    private updateTimeoutId?: NodeJS.Timeout;
 
-    constructor() {
+    constructor(updateInterval: number) {
         this.format = getFormatter();
         this.formatRecord = getRecordFormatter();
+        this.updateInterval = updateInterval;
     }
 
-    clear() {
+    private clear(): void {
         stdout.cursorTo(0, 0);
         stdout.clearScreenDown();
     }
 
-    render(mode: Mode) {
-        let rows: Rows = [];
-        if (mode instanceof AddMode) {
-            rows = this.getAddModeRows(mode);
-        } else if (mode instanceof NormalMode) {
-            rows = this.getNormalModeRows(mode);
-        } else if (mode instanceof RescheduleMode) {
-            rows = this.getRescheduleModeRows(mode);
-        } else if (mode instanceof SelectionMode) {
-            rows = this.getSelectionModeRows(mode);
-        } else if (mode instanceof SearchMode) {
-            rows = this.getSearchModeRows(mode);
+    render(content: Content): void {
+        this.clear();
+
+        const rows: string[] = [];
+        const { lastUpdate, prompt, list, status } = content;
+        this.currentContent = content;
+
+        // Status
+        const statusRow = this.getStatusRow(lastUpdate, status);
+        rows.push(statusRow);
+
+        // Prompt
+        const promptRow = prompt ? this.getPromptRow(prompt) : '';
+        rows.push(promptRow);
+
+        // Records
+        if (list) {
+            const { records, selectedRecord } = list;
+            const recordRows = this.getRecordRows(records, selectedRecord);
+            rows.push(...recordRows);
         }
 
-        let modeStatus = '';
-        const status = mode.getStatus();
-        if (status) {
-            modeStatus = status.text;
-            if (status.level === StatusLevel.ERROR) {
-                modeStatus = `\x1B[31m${modeStatus}\x1B[0m`;
-            }
+        stdout.write(rows.join('\n'));
+
+        this.updateTimeoutId = setTimeout(this.renderStatus.bind(this), 1000);
+    }
+
+    private renderStatus(): void {
+        clearTimeout(this.updateTimeoutId); // in case render wasn't triggered by timeout.
+
+        const content = this.currentContent;
+        if (!content) {
+            return;
         }
 
-        const elapsed = Date.now() - mode.liveStoreView.getLastUpdate();
+        const { lastUpdate, status } = content;
+        const statusRow = this.getStatusRow(lastUpdate, status);
+
+        stdout.cursorTo(0, 0);
+        stdout.clearLine(1);
+        stdout.write(statusRow);
+
+        this.updateTimeoutId = setTimeout(this.renderStatus.bind(this), 1000);
+    }
+
+    private getStatusRow(lastUpdate: number, status?: Status): string {
+        const elapsed = Date.now() - lastUpdate;
         const nextUpdate = Math.max(
-            Math.ceil((UPDATE_INTERVAL - elapsed) / 1000),
+            Math.round((this.updateInterval - elapsed) / 1000),
             0
         );
-        const statusRow = `(${nextUpdate}) ${modeStatus}`;
-        stdout.write([statusRow, ...rows].join('\n'));
+
+        if (!status) {
+            return `(${nextUpdate})`;
+        }
+
+        const { message, type } = status;
+        switch (type) {
+            case StatusType.ERROR:
+                return `(${nextUpdate}) \x1B[31m${message}\x1B[0m`;
+            case StatusType.INFO:
+            default:
+                return `(${nextUpdate}) ${message}`;
+        }
     }
 
-    private getAddModeRows(mode: AddMode): Rows {
-        const promptRow = `Remind me: ${mode.reminderText}`;
-        return [promptRow];
+    private getPromptRow(prompt: Prompt): string {
+        return `${prompt.message}: ${prompt.input}`;
     }
 
-    private getNormalModeRows(mode: NormalMode): Rows {
-        const recordRows = mode.liveStoreView.getRecords().map((record) => {
+    private getRecordRows(
+        records: Record[],
+        selectedRecord?: Record
+    ): string[] {
+        // Header
+        const headerRow = this.format(formattableHeader);
+
+        // Records
+        const now = Date.now();
+        const recordRows = records.map((record) => {
             const row = this.formatRecord(record);
 
-            if (isInPast(record)) {
+            const isInPast = record.reminder.date.getTime() - now < 0;
+            const isSelected =
+                !!selectedRecord && record.id === selectedRecord.id;
+            if (isInPast && isSelected) {
+                return `\x1B[7m\x1B[31m${row}\x1B[0m`;
+            } else if (isSelected) {
+                return `\x1B[7m${row}\x1B[0m`;
+            } else if (isInPast) {
                 return `\x1B[31m${row}\x1B[0m`;
             }
 
             return row;
         });
 
-        const header = this.format(formattableHeader);
-        return [header, ...recordRows];
+        return [headerRow, ...recordRows];
     }
 
-    private getRescheduleModeRows(mode: RescheduleMode): Rows {
-        const records = mode.liveStoreView.getRecords();
-        if (!records.length) {
-            return [];
-        }
-
-        const promptRow = `When: ${mode.dateText}`;
-        return [promptRow];
-    }
-
-    private getSearchModeRows(mode: SearchMode): Rows {
-        // TODO: Show cursor
-        const promptRow = `Search: ${mode.getQuery()}`;
-
-        const resultRows = mode.getResults().map((result) => {
-            const { item: record } = result;
-            if (isInPast(record)) {
-                const row = getWrappedResultText(result, '\x1b[1m', '\x1b[22m'); // bold match
-                return `\x1B[31m${row}\x1B[0m`; // highlight red
-            }
-
-            return getWrappedResultText(result, '\x1b[32m', '\x1b[0m'); // green match
-        });
-
-        const resultsHeaderRow = this.format(formattableHeader);
-        return [promptRow, resultsHeaderRow, ...resultRows];
-    }
-
-    private getSelectionModeRows(mode: SelectionMode): Rows {
-        const selectedRecord = mode.getRecord();
-        const recordRows = mode.liveStoreView.getRecords().map((record) => {
-            const selected =
-                !!selectedRecord && record.id === selectedRecord.id;
-            const inPast = isInPast(record);
-            let row = this.formatRecord(record);
-            if (selected) {
-                row = `\x1B[7m${row}`;
-            }
-
-            if (inPast) {
-                row = `\x1B[31m${row}`;
-            }
-
-            if (selected || inPast) {
-                row = `${row}\x1B[0m`;
-            }
-
-            return row;
-        });
-
-        const recordsHeaderRow = this.format(formattableHeader);
-        return [recordsHeaderRow, ...recordRows];
+    stop(): void {
+        clearTimeout(this.updateTimeoutId);
+        this.clear();
     }
 }
 

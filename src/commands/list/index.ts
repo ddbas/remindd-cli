@@ -1,5 +1,5 @@
 import getFormatter, { getRecordFormatter } from '../../format.js';
-import interactive from './interactive/index.js';
+import InteractiveList from './interactive/index.js';
 import store from '../../store/index.js';
 import { formattableHeader } from './utils.js';
 
@@ -12,7 +12,8 @@ type Options = {
 
 const list = async (options: Options): Promise<void> => {
     if (options.interactive) {
-        interactive();
+        const interactiveList = new InteractiveList();
+        interactiveList.start();
         return;
     }
 
