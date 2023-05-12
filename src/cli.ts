@@ -81,15 +81,9 @@ program
     .option('-a, --all', 'List all reminders.')
     .option('-c, --completed', 'List the completed reminders.')
     .option('-h, --header', 'Show the column headers.')
-    .option('-i, --interactive', 'Run in interactive mode.')
     .action(async (options) => {
-        const {
-            all = false,
-            completed = false,
-            header = false,
-            interactive = false,
-        } = options;
-        await list({ all, completed, header, interactive });
+        const { all = false, completed = false, header = false } = options;
+        await list({ all, completed, header });
     });
 
 program

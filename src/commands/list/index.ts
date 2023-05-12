@@ -1,5 +1,4 @@
 import getFormatter, { getRecordFormatter } from '../../format.js';
-import InteractiveList from './interactive/index.js';
 import store from '../../store/index.js';
 import { formattableHeader } from './utils.js';
 
@@ -7,16 +6,9 @@ type Options = {
     all: boolean;
     completed: boolean;
     header: boolean;
-    interactive: boolean;
 };
 
 const list = async (options: Options): Promise<void> => {
-    if (options.interactive) {
-        const interactiveList = new InteractiveList();
-        interactiveList.start();
-        return;
-    }
-
     let records;
     if (options.all) {
         const promise = Promise.all([
