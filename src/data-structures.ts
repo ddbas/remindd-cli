@@ -1,4 +1,4 @@
-export class Stack<Item> {
+export class Stack<Item> implements Iterable<Item> {
     private items: Item[] = [];
 
     peek(): Item | undefined {
@@ -19,6 +19,10 @@ export class Stack<Item> {
 
     size(): number {
         return this.items.length;
+    }
+
+    [Symbol.iterator](): Iterator<Item> {
+        return Array.from(this.items).reverse().values();
     }
 }
 
@@ -53,5 +57,9 @@ export class NonEmptyStack<Item> {
 
     size(): number {
         return this.stack.size();
+    }
+
+    [Symbol.iterator](): Iterator<Item> {
+        return this.stack[Symbol.iterator]();
     }
 }

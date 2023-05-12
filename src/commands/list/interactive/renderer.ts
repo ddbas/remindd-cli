@@ -4,12 +4,20 @@ import getFormatter, {
     getRecordFormatter,
 } from '../../../format.js';
 import { Record } from '../../../store/index.js';
+import { SearchResult } from '../../../search.js';
 import { formattableHeader } from '../utils.js';
 
-interface ListContent {
+interface RecordContent {
     records: Record[];
     selectedRecord?: Record;
 }
+
+interface ResultsContent {
+    results: SearchResult<Record>[];
+    selectedRecord?: Record;
+}
+
+type ListContent = RecordContent | ResultsContent;
 
 interface Prompt {
     message: string;
@@ -69,9 +77,15 @@ class Renderer {
 
         // Records
         if (list) {
-            const { records, selectedRecord } = list;
-            const recordRows = this.getRecordRows(records, selectedRecord);
-            rows.push(...recordRows);
+            if ('records' in list) {
+                const { records, selectedRecord } = list;
+                const recordRows = this.getRecordRows(records, selectedRecord);
+                rows.push(...recordRows);
+            } else {
+                const { results, selectedRecord } = list;
+                const resultRows = this.getResultRows(results, selectedRecord);
+                rows.push(...resultRows);
+            }
         }
 
         stdout.write(rows.join('\n'));
@@ -149,6 +163,14 @@ class Renderer {
         });
 
         return [headerRow, ...recordRows];
+    }
+
+    private getResultRows(
+        results: SearchResult<Record>[],
+        selectedRecord?: Record
+    ): string[] {
+        // TODO: generate result rows
+        return [];
     }
 
     stop(): void {
