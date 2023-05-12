@@ -1,5 +1,6 @@
-import getFormatter, { getRecordFormatter } from '../format.js';
-import store from '../store/index.js';
+import getFormatter, { getRecordFormatter } from '../../format.js';
+import store from '../../store/index.js';
+import { formattableHeader } from './utils.js';
 
 type Options = {
     all: boolean;
@@ -35,17 +36,6 @@ const list = async (options: Options): Promise<void> => {
     const formatRecord = getRecordFormatter();
     const rows: string[] = [];
     if (options.header) {
-        const formattableHeader = {
-            i() {
-                return 'id';
-            },
-            d() {
-                return 'date';
-            },
-            t() {
-                return 'title';
-            },
-        };
         rows.push(format(formattableHeader));
     }
     records.forEach((record) => {

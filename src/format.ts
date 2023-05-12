@@ -85,7 +85,9 @@ const getFormatter = (
     };
 };
 
-const getRecordFormatter = (template: string = DEFAULT_TEMPLATE) => {
+const getRecordFormatter = (
+    template: string = DEFAULT_TEMPLATE
+): ((r: Record) => string) => {
     const format = getFormatter(template);
     return (record: Record) => format(new FormattableRecord(record));
 };

@@ -2,7 +2,7 @@ import remind from '@remindd/core';
 
 import execute from '../execute.js';
 import { getRecordFormatter } from '../format.js';
-import { record as recordPrompt } from '../prompts/index.js';
+import prompt from '../prompt/index.js';
 import makeSearcher from '../search.js';
 import store from '../store/index.js';
 
@@ -22,7 +22,7 @@ const reschedule = async (
     let recordText;
     const format = getRecordFormatter();
     if (options.search) {
-        record = await recordPrompt(query, records);
+        record = await prompt(query, records);
         if (!record) {
             return;
         }

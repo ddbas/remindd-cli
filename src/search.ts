@@ -68,6 +68,30 @@ const makeSearcher = <Item>(
     };
 };
 
-export { Match, SearchResult };
+const getWrappedResultText = (
+    result: SearchResult<any>,
+    start: string,
+    end: string
+): string => {
+    const { matches, text } = result;
+    return matches.reduce((highlightedText, match) => {
+        const { start: startIndex, end: endIndex } = match;
+        let offset = highlightedText.length - text.length;
+        const offsetStart = startIndex + offset;
+        const newHighlightedText =
+            highlightedText.slice(0, offsetStart) +
+            start +
+            highlightedText.slice(offsetStart);
+        offset = newHighlightedText.length - text.length;
+        const offsetEnd = endIndex + offset;
+        return (
+            newHighlightedText.slice(0, offsetEnd) +
+            end +
+            newHighlightedText.slice(offsetEnd)
+        );
+    }, text);
+};
+
+export { Match, SearchResult, getWrappedResultText };
 
 export default makeSearcher;
