@@ -1,3 +1,17 @@
+# [1.4.0](https://github.com/ddbas/remindd-cli/compare/v1.3.0...v1.4.0) (2023-05-12)
+
+
+### Bug Fixes
+
+* fix store creation logic ([#2](https://github.com/ddbas/remindd-cli/issues/2)) ([dfcc8f3](https://github.com/ddbas/remindd-cli/commit/dfcc8f3a02e7757cc3847d38cd0735fdcaeb1045))
+
+
+### Features
+
+* options for executing a command ([#1](https://github.com/ddbas/remindd-cli/issues/1)) ([4811ab4](https://github.com/ddbas/remindd-cli/commit/4811ab4191981b169eff58d7f1e6e4848c37fc49))
+
+
+
 # [1.3.0](https://github.com/ddbas/remindd-cli/compare/v1.2.0...v1.3.0) (2023-02-19)
 
 
