@@ -1,3 +1,12 @@
+# [1.5.0](https://github.com/ddbas/remindd-cli/compare/v1.4.0...v1.5.0) (2023-05-14)
+
+
+### Features
+
+* highlight reminders in the past in red ([bb1b36b](https://github.com/ddbas/remindd-cli/commit/bb1b36bf74c3084c5ec62ea1fcf8077221786f8e))
+
+
+
 # [1.4.0](https://github.com/ddbas/remindd-cli/compare/v1.3.0...v1.4.0) (2023-05-12)
 
 
