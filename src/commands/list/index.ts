@@ -38,8 +38,14 @@ const list = async (options: Options): Promise<void> => {
     if (options.header) {
         rows.push(format(formattableHeader));
     }
+
+    const now = Date.now();
     records.forEach((record) => {
-        rows.push(formatRecord(record));
+        const recordRow =
+            record.reminder.date.getTime() < now
+                ? `\x1B[31m${formatRecord(record)}\x1B[0m`
+                : formatRecord(record);
+        rows.push(recordRow);
     });
 
     console.log(rows.join('\n'));
