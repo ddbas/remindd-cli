@@ -1,3 +1,12 @@
+# [1.6.0](https://github.com/ddbas/remindd-cli/compare/v1.5.0...v1.6.0) (2023-05-16)
+
+
+### Features
+
+* removing the 'execute' option ([cbab791](https://github.com/ddbas/remindd-cli/commit/cbab791cf2babae10aa8ff72ad56ca988faa8653))
+
+
+
 # [1.5.0](https://github.com/ddbas/remindd-cli/compare/v1.4.0...v1.5.0) (2023-05-14)
 
 
