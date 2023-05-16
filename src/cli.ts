@@ -35,14 +35,10 @@ program
         "A full or partial match of the reminder's title or id."
     )
     .option('-s, --search', 'Renders a fuzzy search prompt.')
-    .option(
-        '-e, --execute <command>',
-        'A command used to search the list of reminders. The output of the command is the reminder to complete.'
-    )
     .action(async (queryWords, options) => {
-        const { execute: executeCommand, search = false } = options;
+        const { search = false } = options;
         const query = queryWords.length ? queryWords.join(' ') : undefined;
-        await complete(query, { executeCommand, search });
+        await complete(query, { search });
     });
 
 const daemon = program.command('daemon').description('`remindd` daemon.');
@@ -106,14 +102,10 @@ program
         "A full or partial match of the reminder's title or id."
     )
     .option('-s, --search', 'Renders a fuzzy search prompt.')
-    .option(
-        '-e, --execute <command>',
-        'A command used to search the list of reminders. The output of the command is the reminder to remove.'
-    )
     .action(async (queryWords, options) => {
-        const { execute: executeCommand, search = false } = options;
+        const { search = false } = options;
         const query = queryWords.length ? queryWords.join(' ') : undefined;
-        await remove(query, { executeCommand, search });
+        await remove(query, { search });
     });
 
 program
@@ -124,14 +116,10 @@ program
         "A full or partial match of the reminder's title or id, as well as the date and/or time to reschedule to."
     )
     .option('-s, --search', 'Renders a fuzzy search prompt.')
-    .option(
-        '-e, --execute <command>',
-        'A command used to search the list of reminders. The output of the command is the reminder to reschedule. When using this option, only the date and time information in the <reminder...> argument will be used.'
-    )
     .action(async (reminderWords, options) => {
-        const { execute: executeCommand, search = false } = options;
+        const { search = false } = options;
         const reminderText = reminderWords.join(' ');
-        await reschedule(reminderText, { executeCommand, search });
+        await reschedule(reminderText, { search });
     });
 
 program.parse(process.argv);

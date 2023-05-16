@@ -1,13 +1,11 @@
 import remind from '@remindd/core';
 
-import execute from '../execute.js';
 import { getRecordFormatter } from '../format.js';
 import prompt from '../prompt/index.js';
 import makeSearcher from '../search.js';
 import store from '../store/index.js';
 
 type Options = {
-    executeCommand?: string;
     search: boolean;
 };
 
@@ -23,13 +21,6 @@ const reschedule = async (
     const format = getRecordFormatter();
     if (options.search) {
         record = await prompt(query, records);
-        if (!record) {
-            return;
-        }
-
-        recordText = format(record);
-    } else if (options.executeCommand) {
-        record = await execute(options.executeCommand, records);
         if (!record) {
             return;
         }
