@@ -17,15 +17,12 @@ const remove = async (
     }
 
     let record;
-    let recordText;
     const format = getRecordFormatter();
     if (options.search) {
         record = await prompt(query || '', records);
         if (!record) {
             return;
         }
-
-        recordText = format(record);
     } else {
         if (!query) {
             throw new Error('No query provided.');
@@ -41,11 +38,11 @@ const remove = async (
 
         const result = results[0];
         record = result.item;
-        recordText = result.text;
     }
 
     await store.remove(record);
 
+    const recordText = format(record);
     const output = `Reminder removed.\n${recordText}`;
     console.log(output);
 };
