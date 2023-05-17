@@ -1,3 +1,12 @@
+## [1.6.2](https://github.com/ddbas/remindd-cli/compare/v1.6.1...v1.6.2) (2023-05-17)
+
+
+### Bug Fixes
+
+* output the latest version of the reminder ([900a009](https://github.com/ddbas/remindd-cli/commit/900a009f9273e48bc981fbaceafe7f52cc369718))
+
+
+
 ## [1.6.1](https://github.com/ddbas/remindd-cli/compare/v1.6.0...v1.6.1) (2023-05-17)
 
 
