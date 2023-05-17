@@ -1,6 +1,6 @@
 {
   "name": "@remindd/cli",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "A natural language reminder CLI.",
   "author": "David Bastien",
   "homepage": "https://github.com/ddbas/remindd-cli#readme",

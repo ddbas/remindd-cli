@@ -1,3 +1,12 @@
+## [1.6.1](https://github.com/ddbas/remindd-cli/compare/v1.6.0...v1.6.1) (2023-05-17)
+
+
+### Bug Fixes
+
+* validate that a reminder title is provided ([365993f](https://github.com/ddbas/remindd-cli/commit/365993fcb2885f435d820a631263e639e05ffcd7))
+
+
+
 # [1.6.0](https://github.com/ddbas/remindd-cli/compare/v1.5.0...v1.6.0) (2023-05-16)
 
 
