@@ -40,7 +40,7 @@
     "node": ">= 16"
   },
   "dependencies": {
-    "@remindd/core": "^1.0.0",
+    "@remindd/core": "^1.0.1",
     "commander": "^9.4.1",
     "fzf": "^0.5.1",
     "node-notifier": "^10.0.1",
